@@ -32,7 +32,7 @@ module.exports = function(grunt) {
                 }
             },
 
-            uses_defaults: ['src/**/*.js'], //, 'src/**/*.js'],
+            uses_defaults: ['src/**/app.js'], //, 'src/**/*.js'],
 
             with_overrides: {
                 options: {
@@ -40,26 +40,19 @@ module.exports = function(grunt) {
                     undef: true
                 },
                 files: {
-                    src: ['src/**/*.js', 'src/**/*.js']
+                    src: ['src/**/*.js']
                 }
             },
 
-            beforeconcat: ['src/static/scripts/perfmatters.js'],
-            afterconcat: ['src/static/scripts/perfmatters.concat.js']
+            beforeconcat: ['src/static/scripts/app.js'],
+            afterconcat: ['src/static/scripts/app.concat.js']
         },
 
         /** Concat **/
         concat: {
             index: {
-                src: ['src/static/styles/style.css'],
+                src: ['src/static/styles/style.css', 'src/static/styles/bootstrap-grid.css'],
                 dest:'src/static/styles/style.css',
-                options: {
-                    separator: ''
-                }
-            },
-            pizza: {
-                src: ['src/views/pizza/css/style.css', 'src/views/pizza/css/bootstrap-grid.css'],
-                dest:'src/views/pizza/css/combined.css',
                 options: {
                     separator: ''
                 }
@@ -69,8 +62,7 @@ module.exports = function(grunt) {
         codekit: {
             dev: {
                 files: {
-                    'src/static/scripts/perfmatters.concat.js': ['src/static/scripts/perfmatters.js', 'src/static/scripts/app.js'],
-                    'src/views/pizza/js/main.concat.js': ['src/views/pizza/js/main.js']
+                    'src/static/scripts/app.concat.js': ['src/static/scripts/app.js']
                 }
             }
         },
@@ -82,8 +74,7 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'dist/static/scripts/perfmatters.js': ['src/static/scripts/perfmatters.concat.js'],
-                    'dist/views/pizza/js/main.js': ['src/views/pizza/js/main.concat.js']
+                    'dist/static/scripts/app.js': ['src/static/scripts/app.concat.js']
                 }
             }
         },
@@ -97,11 +88,7 @@ module.exports = function(grunt) {
                     minifyJS: true
                 },
                 files: {
-                    'dist/index.html': 'src/index.html',
-                    'dist/views/pizza/pizza.html': 'src/views/pizza/pizza.html',
-                    'dist/project-2048.html': 'src/project-mobile.html',
-                    'dist/project-mobile.html': 'src/project-mobile.html',
-                    'dist/project-webperf.html': 'src/project-webperf.html'
+                    'dist/index.html': 'src/index.html'
                 }
             },
         },
@@ -118,13 +105,13 @@ module.exports = function(grunt) {
                 files: [{
                     expand: true,
                     cwd: 'src/static/styles/',
-                    src: ['style.scss', 'print.scss', 'under480.scss'],
+                    src: ['style.scss', 'print.scss'],
                     dest: 'src/static/styles',
                     ext: '.css'
                 }]
             },
 
-            dist: {
+            /*dist: {
                 options: {
                     //outputStyle: 'compressed',
                     sourceMap: false
@@ -132,11 +119,11 @@ module.exports = function(grunt) {
                 files: [{
                     expand: true,
                     cwd: 'src/static/styles/',
-                    src: ['style.scss', 'print.scss', 'under480.scss'],
+                    src: ['style.scss', 'print.scss'],
                     dest: 'dist/static/styles',
                     ext: '.css'
                 }]
-            }
+            }*/
         },
 
         autoprefixer: {
@@ -165,13 +152,6 @@ module.exports = function(grunt) {
                     cwd: 'dist/static/styles',
                     src: ['*.css', '!*.min.css'],
                     dest: 'dist/static/styles',
-                    ext: '.css'
-                },
-                {
-                    expand: true,
-                    cwd: 'src/views/pizza/css',
-                    src: ['combined.css', '!*.min.css'],
-                    dest: 'dist/views/pizza/css',
                     ext: '.css'
                 }]
             }
@@ -223,12 +203,7 @@ module.exports = function(grunt) {
                  You don't need to change this part if you don't change
                  the directory structure.
                  */
-                files: [{
-                    expand: true,
-                    src: ['*.{gif,jpg,png}'],
-                    cwd: 'src/img_src/resp/pizza',
-                    dest: 'src/views/pizza/images'
-                },
+                files: [
                 {
                     expand: true,
                     src: ['*.{gif,jpg,png}'],
@@ -250,12 +225,6 @@ module.exports = function(grunt) {
                     cwd: 'src/static/images',                   // Src matches are relative to this path
                     src: ['*.{png,jpg,gif}'],   // Actual patterns to match
                     dest: 'dist/static/images'                  // Destination path prefix
-                },
-                {
-                    expand: true,                  // Enable dynamic expansion
-                    cwd: 'src/views/pizza/images',                   // Src matches are relative to this path
-                    src: ['*.{png,jpg,gif}'],   // Actual patterns to match
-                    dest: 'dist/views/pizza/images'                  // Destination path prefix
                 }]
             }
         },
@@ -269,14 +238,14 @@ module.exports = function(grunt) {
                     imageAlpha: true,
                     jpegMini: false
                 },
-                src: ['src/static/images/**/*.png','src/views/pizza/images/**/*.png']
+                src: ['src/static/images/**/*.png']
             },
             allJpgs: {
                 options: {
                     imageAlpha: false,
                     jpegMini: true
                 },
-                src: ['src/static/images/**/*.jpg','src/views/pizza/images/pizzeria-large.jpg']
+                src: ['src/static/images/**/*.jpg']
 
             }
            /* build: {
@@ -297,9 +266,8 @@ module.exports = function(grunt) {
             pub: ['public/'],
             dist: ['dist/'],
             concatenatedjsfile: [
-                "src/static/scripts/perfmatters.concat.js",
-                "src/views/pizza/js/main.concat.js"],
-            beforeprfixedcssfile: ["dist/static/styles/before-prefix",],
+                "src/static/scripts/app.concat.js"],
+            beforeprfixedcssfile: ["dist/static/styles/before-prefix"],
             afterprfixedcssfile: ["dist/static/styles/after-prefix"]
         },
 
@@ -320,12 +288,6 @@ module.exports = function(grunt) {
                     src: 'src/img_src/fixed/*.{gif,jpg,png}',
                     dest: 'src/static/images/',
                     flatten: true
-                },
-                {
-                    expand: true,                  // Enable dynamic expansion
-                    cwd: 'src/img_src/fixed/pizza',                   // Src matches are relative to this path
-                    src: ['**/*.{png,jpg,gif}'],   // Actual patterns to match
-                    dest: 'src/views/pizza/images'                  // Destination path prefix
                 }]
             },
 
@@ -412,13 +374,16 @@ module.exports = function(grunt) {
             js: {
                 files: [
                     'src/static/scripts/**/*.js',
-                    '!src/static/scripts/perfmatters.concat.js'
+                    '!src/static/scripts/app.concat.js'
                 ],
                 tasks: ['codekit', 'uglify', 'copy:serviceWorker']
             },
             scss: {
                 files: ['src/static/styles/**/*.scss'],
-                tasks: ['sass']
+                tasks: ['sass'],
+                options: {
+                    livereload: true
+                },
             }
         },
 
@@ -541,6 +506,11 @@ module.exports = function(grunt) {
 
     grunt.registerTask('cleanup', [
         'clean:concatenatedjsfile'
+    ]);
+
+
+    grunt.registerTask('refresh', [
+        'watch:scss'
     ]);
 
     grunt.registerTask('dev', [
