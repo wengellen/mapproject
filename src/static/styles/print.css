@@ -6,7 +6,8 @@
     background: transparent !important;
     color: black !important;
     text-shadow: none !important;
-    filter: none !important;
+    -webkit-filter: none !important;
+            filter: none !important;
     -ms-filter: none !important; }
   a, a:visited {
     color: #444 !important;
