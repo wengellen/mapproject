@@ -25,15 +25,14 @@
   </div>
 
   <div class="map-container">
-    <div class="map">
+    <div id="map">
 
     </div>
   </div>
 
-  <div class="marker-list-container">
-    <ul id="marker-ilst">
-      <li>
-        <p>I made my own version of 2048. How cool is that!?</p>
+  <div class="marker-list-container" >
+    <ul id="marker-ilst" data-bind="foreach: locationList">
+      <li data-bind="text: name, click: $parent.setLocation($data)">
       </li>
     </ul>
   </div>
@@ -71,6 +70,7 @@
     }
 
   </script>-->
+  <script src="./static/scripts/lib/knockout-3.2.0.js"></script>
 
   <script src="./static/scripts/app.js"></script>
   <script>
