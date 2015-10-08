@@ -42,7 +42,6 @@ $(document).ready(function(){
 
   ko.bindingHandlers.map = {
       init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext){
-        console.log('googlemap binding init')
 
         var locationList = ko.unwrap(valueAccessor());
         console.log(locationList);
@@ -64,11 +63,13 @@ $(document).ready(function(){
 
            console.log(request.query);
 
-           service.textSearch(request, function(result, status){
-             if(status == google.maps.places.PlacesServiceStatus.OK){
-               createMapMarker(result[0]);
-             }
-           });
+           service.textSearch(request, callback);
+         }
+
+         function callback(result, status){
+           if(status === google.maps.places.PlacesServiceStatus.OK){
+             createMapMarker(result[0]);
+           }
          }
 
          function createMapMarker(place){
@@ -106,7 +107,6 @@ $(document).ready(function(){
 
            google.maps.event.addListener(marker, 'click', function() {
              // your code goes here!
-             console.log('show marker: '+ marker.title)
              infoWindow.open(map, marker);
            });
 

@@ -105,6 +105,10 @@ footer span {
     font-size: 12px; }
   header p {
     padding-left: 4.5em; } }
+
+#map {
+  width: 300px;
+  height: 300px; }
 /*!
  * Bootstrap v3.2.0 (http://getbootstrap.com)
  * Copyright 2011-2014 Twitter, Inc.
