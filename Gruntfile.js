@@ -291,13 +291,23 @@ module.exports = function(grunt) {
                 }]
             },
 
-            serviceWorker: {
+            /*serviceWorker: {
                 files:[{
                     expand: true,
                     cwd: 'src/',
                     src: [
                         'static/scripts/third_party/serviceworker-cache-polyfill.js',
                         'static/service-worker.js'
+                    ],
+                    dest: 'dist/'
+                }]
+            },*/
+            lib: {
+                files:[{
+                    expand: true,
+                    cwd: 'src/',
+                    src: [
+                        'static/scripts/**/*.js'
                     ],
                     dest: 'dist/'
                 }]
