@@ -35,31 +35,7 @@ var CURRENT_CACHES = {
 
 self.addEventListener('install', function(event) {
     var urlsToPrefetch = [
-        './',
-        './static/styles/print.css',
-        './static/styles/site.css',
-        './static/scripts/perfmatters.js',
-        './static/images/profilepic.jpg',
-        './static/images/mobilewebdev-small.jpg',
-        './static/images/cam_be_like-small.jpg',
-        './static/images/2048-small.png',
-
-
-        './views/pizza/pizza.html',
-        './views/pizza/css/site.css',
-        './views/pizza/js/main.js',
-        './views/pizza/images/pizza.png',
-        './views/pizza/images/pizzeria-small.jpg',
-        './views/pizza/images/pizzeria-medium.jpg',
-        './views/pizza/images/pizzeria-large.jpg',
-        './views/pizza/images/pizzeria-2x.jpg',
-        // This is an image that will be used in pre_fetched.html
-
-        "https://cdnjs.cloudflare.com/ajax/libs/picturefill/2.3.1/picturefill.min.js",
-        "https://www.google-analytics.com/analytics.js",
-        "https://lh4.ggpht.com/kJEnfqhPvtm4m3EneSZ4fWYGS8lW4YNhEjk6zPkyrQaBUHc-2Y_ElDic99NHI0h-UBLXVbRCjFybFvrWxdk=s100",
-        "https://lh6.ggpht.com/f_0W8h__3G99CWTjnMjD8BUKm7yp2-wJyApLtTwFoFtlal2ULf_JgHIsOQq2NiYfKOdMlXlMHDKNo5XVZLs=s100",
-        "https://lh5.ggpht.com/IKdCmTWn8a2nMhlwMYzryvzRN5CUZAOBr4tDrEAbszV7TIFe9pRAInA4kkYcgTXwrifJsBEsq1agTueuu-g=s100"
+        './'
     ];
 
     // All of these logging statements should be visible via the "Inspect" interface
