@@ -14,54 +14,39 @@ window.addEventListener("load", function(event) {
 });
 
 
-$(document).ready(function(){
-  ko.applyBindings(new ViewModel());
-});
 
     // MODEL
 
     var initialLocations = [
-      {
-        name: "San Francisco, USA"
-      },
-      {
-        name: "Taipei, Taiwan"
-      },
-      {
-        name: "Taichung, Taiwan"
-      }
+        "San Francisco, USA",
+         "Taipei, Taiwan"
     ];
 
     var Location = function(data){
-      this.name = ko.observable(data.name);
-      this.lat  = ko.observable(12.24);
-      this.lng  = ko.observable(24.54);
+      this.name = ko.observable(data);
     };
 
     var map;
 
   ko.bindingHandlers.map = {
-      init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext){
+      init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+          var mapOptions = {
+              zoom: 6,
+              disableDefaultUI: true
+          };
 
-        var locationList = ko.unwrap(valueAccessor());
-        console.log(locationList);
+          map = new google.maps.Map(element, mapOptions);
+          window.mapBounds = new google.maps.LatLngBounds();
+      },
 
-        var mapOptions = {
-          zoom: 6,
-          disableDefaultUI: true
-        };
+      update: function(element, valueAccessor){
+          var locationList = ko.unwrap(valueAccessor());
+          var service = new google.maps.places.PlacesService(map);
 
-        map = new google.maps.Map(element, mapOptions);
-
-        window.mapBounds = new google.maps.LatLngBounds();
-
-        var service = new google.maps.places.PlacesService(map);
-         for(var place in locationList){
+          for(var place in locationList){
            var request = {
              query: locationList[place].name()
            };
-
-           console.log(request.query);
 
            service.textSearch(request, callback);
          }
@@ -115,20 +100,14 @@ $(document).ready(function(){
            map.fitBounds(bounds);
            map.setCenter(bounds.getCenter());
          }
-
-
-
-        //google.maps.event.addListener(locObj.marker, 'dragend', locObj.onMarkerMoved);
-
-        //$("#" + element.getAttribute("id")).data("locObj",locObj);
       }
     };
 
-
     // ViewModel
-
     var ViewModel = function(){
       var self = this;
+
+      this.newLocation = ko.observable();
 
       this.locationList = ko.observableArray([]);
 
@@ -143,11 +122,16 @@ $(document).ready(function(){
         console.log(clickedLocation);
       };
 
-
-
-
+      this.addLocation = function() {
+            console.log('addLocation called');
+          var place = ko.unwrap(self.newLocation);
+            self.locationList.push(new Location(place));
+        }
     };
 
 
 
+$(document).ready(function(){
+    ko.applyBindings(new ViewModel());
+});
 

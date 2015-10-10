@@ -19,9 +19,10 @@
 
 <div class="container">
   <div class="search-container">
-    <div id="search" data-bind="with: currentLocation">
+    <div id="search">
       <input type="text" placeholder="Search" name="search-input"
-              data-bind="value: name" style="outline-color: red">
+              data-bind="value: newLocation" style="outline-color: red">
+      <button id="add-btn" data-bind="click: addLocation">Add Place</button>
     </div>
   </div>
   <div class="map-container" >
