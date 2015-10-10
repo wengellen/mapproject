@@ -19,7 +19,7 @@ window.addEventListener("load", function(event) {
 
     var initialLocations = [
         "San Francisco, USA",
-         "Taipei, Taiwan"
+        "Taipei"
     ];
 
     var Location = function(data){
@@ -27,6 +27,7 @@ window.addEventListener("load", function(event) {
     };
 
     var map;
+var markers = [];
 
   ko.bindingHandlers.map = {
       init: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
@@ -39,9 +40,11 @@ window.addEventListener("load", function(event) {
           window.mapBounds = new google.maps.LatLngBounds();
       },
 
-      update: function(element, valueAccessor){
-          var locationList = ko.unwrap(valueAccessor());
+      update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext){
+          var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
           var service = new google.maps.places.PlacesService(map);
+
+          deleteMarkers();
 
           for(var place in locationList){
            var request = {
@@ -53,11 +56,30 @@ window.addEventListener("load", function(event) {
 
          function callback(result, status){
            if(status === google.maps.places.PlacesServiceStatus.OK){
-             createMapMarker(result[0]);
+               addMarker(result[0]);
            }
          }
 
-         function createMapMarker(place){
+          function setMapOnAll(map){
+              for( var i = 0; i < markers.length; i++){
+                  markers[i].setMap(map);
+              }
+          }
+
+         function clearMarkers(){
+             setMapOnAll(null);
+         }
+
+          function showMarkers(){
+              setMapOnAll(map);
+          }
+
+          function deleteMarkers(){
+              clearMarkers();
+              markers = [];
+          }
+
+         function addMarker(place){
            var lat = place.geometry.location.lat();
            var lon = place.geometry.location.lng();
            var name = place.formatted_address;
@@ -69,6 +91,8 @@ window.addEventListener("load", function(event) {
              position: place.geometry.location,
              title: name
            });
+
+             markers.push(marker);
 
            var contentString = '<div id="content" >'+
                '<div id="siteNotice">'+
@@ -103,35 +127,63 @@ window.addEventListener("load", function(event) {
       }
     };
 
+
+
     // ViewModel
-    var ViewModel = function(){
-      var self = this;
+    var ViewModel = function() {
+        var self = this;
 
-      this.newLocation = ko.observable();
+        this.newLocation = ko.observable();
+        this.searchString = ko.observable('Taipei');
 
-      this.locationList = ko.observableArray([]);
+        this.locationList = ko.observableArray([]);
+        //this.filterList = ko.observableArray([]);
 
-      initialLocations.forEach(function(locationItem, index){
-        self.locationList.push( new Location(locationItem) );
-      });
+        initialLocations.forEach(function (locationItem, index) {
+            self.locationList.push(new Location(locationItem));
+        });
 
-      this.currentLocation = ko.observable( this.locationList()[0] );
+        this.currentLocation = ko.observable(this.locationList()[0]);
 
-      this.setLocation = function(clickedLocation){
-        self.currentLocation(clickedLocation);
-        console.log(clickedLocation);
-      };
+        this.setLocation = function (clickedLocation) {
+            self.currentLocation(clickedLocation);
+            console.log(clickedLocation);
+        };
 
-      this.addLocation = function() {
+        this.addLocation = function () {
             console.log('addLocation called');
-          var place = ko.unwrap(self.newLocation);
-            self.locationList.push(new Location(place));
-        }
-    };
+            var place = self.newLocation();
 
+            // TODO: How to find observable within an observableArray
+            var match = ko.utils.arrayFirst(self.locationList(), function (item) {
+                return place == item.name();
+            });
+            if (!match) {
+                self.locationList.push(new Location(place));
+            };
+
+        }
+
+        this.filterLocations = ko.dependentObservable(function () {
+            var filter = self.searchString().toLowerCase();
+            if (!filter) {
+                return self.locationList();
+            } else {
+                return ko.utils.arrayFilter(self.locationList(), function (item) {
+                    return ko.utils.stringStartsWith(item.name().toLowerCase(), filter);
+                });
+            }
+        });
+    }
 
 
 $(document).ready(function(){
     ko.applyBindings(new ViewModel());
 });
 
+ko.utils.stringStartsWith = function (string, startsWith) {
+    string = string || "";
+    if (startsWith.length > string.length)
+        return false;
+    return string.substring(0, startsWith.length) === startsWith;
+};

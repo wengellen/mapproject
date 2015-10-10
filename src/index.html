@@ -21,17 +21,24 @@
   <div class="search-container">
     <div id="search">
       <input type="text" placeholder="Search" name="search-input"
-              data-bind="value: newLocation" style="outline-color: red">
+             data-bind="value: searchString, valueUpdate: 'afterkeydown'"
+              style="outline-color: red">
+<!--
+      <button id="search-btn" data-bind="filterList: searchString">Search</button>
+-->
+
+      <input type="text" placeholder="Tokyo" name="add-input"
+             data-bind="value: newLocation" >
       <button id="add-btn" data-bind="click: addLocation">Add Place</button>
     </div>
   </div>
   <div class="map-container" >
-    <div id="map" data-bind="map: locationList" style="width: 100%; height: 300px">
+    <div id="map" data-bind="map: filterLocations" style="width: 100%; height: 300px">
     </div>
   </div>
 
   <div class="marker-list-container" style="float:left">
-    <ul id="marker-ilst" data-bind="foreach: locationList">
+    <ul id="marker-ilst" data-bind="foreach: filterLocations">
       <li data-bind="text: name, click: $parent.setLocation($data)">
       </li>
     </ul>
