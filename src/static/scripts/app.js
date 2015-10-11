@@ -19,7 +19,8 @@ window.addEventListener("load", function(event) {
 
     var initialLocations = [
         "San Francisco, USA",
-        "Taipei"
+        "Taipei",
+        "Tailand"
     ];
 
     var Location = function(data){
@@ -85,11 +86,14 @@ var markers = [];
            var name = place.formatted_address;
            var bounds = window.mapBounds;
 
+
            // marker is an object with additional data about the pin for a single location
            var marker = new google.maps.Marker({
-             map: map,
-             position: place.geometry.location,
-             title: name
+               map: map,
+               icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+               animation: google.maps.Animation.DROP,
+               position: place.geometry.location,
+               title: name
            });
 
              markers.push(marker);
@@ -109,16 +113,49 @@ var markers = [];
                '</div>'+
                '</div>';
 
+          function toggleBounce(){
+              console.log('toggleBounce');
+
+              if(marker.getAnimation() !== null){
+                 marker.setAnimation(null);
+             }else{
+                 marker.setAnimation(google.maps.Animation.BOUNCE);
+             }
+          }
+
            var infoWindow = new google.maps.InfoWindow({
              content: contentString,
              maxWidth: 200
            });
 
-           google.maps.event.addListener(marker, 'click', function() {
-             // your code goes here!
-             infoWindow.open(map, marker);
-           });
+             google.maps.event.addListener(marker, 'click', function() {
+                 marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+                 marker.isSelected = true;
+                 infoWindow.open(map, marker);
+                 currentMarker = marker;
 
+                 toggleBounce();
+             });
+
+             google.maps.event.addListener(infoWindow,'closeclick',function(){
+                 // currentMarker.setMap(null); //removes the marker
+                 // then, remove the infowindows name from the array
+                 // marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+                 toggleBounce();
+                 marker.isSelected = false;
+                 marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+             });
+
+             google.maps.event.addListener(marker, 'mouseover', function() {
+                 console.log('mouseover');
+                 marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+             });
+
+             google.maps.event.addListener(marker, 'mouseout', function() {
+                 if(!marker.isSelected){
+                     marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+                 }
+             });
 
            bounds.extend(new google.maps.LatLng(lat, lon));
            map.fitBounds(bounds);
@@ -127,27 +164,40 @@ var markers = [];
       }
     };
 
+    ko.bindingHandlers.setLocation = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var place = ko.unwrap(valueAccessor());
+            var allBindings = allBindingsAccessor();
+            element.addEventListener('click', function(){
+                console.log('click:');
+                console.log(place.name());
+            });
+        },
 
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+        }
+    }
 
     // ViewModel
     var ViewModel = function() {
         var self = this;
 
         this.newLocation = ko.observable();
-        this.searchString = ko.observable('Taipei');
+        this.searchString = ko.observable('Tai');
 
         this.locationList = ko.observableArray([]);
-        //this.filterList = ko.observableArray([]);
+        //this.filteredArr =  ko.observableArray([]);
 
-        initialLocations.forEach(function (locationItem, index) {
-            self.locationList.push(new Location(locationItem));
-        });
 
-        this.currentLocation = ko.observable(this.locationList()[0]);
+        self.locationList = ko.observableArray(ko.utils.arrayMap(initialLocations, function(locationItem){
+            return new Location(locationItem)
+        }));
 
-        this.setLocation = function (clickedLocation) {
-            self.currentLocation(clickedLocation);
-            console.log(clickedLocation);
+        this.currentLocation = ko.observable(self.locationList()[0]);
+
+        this.setCurrentLocation = function (data) {
+            self.currentLocation(data);
+            console.log(self.currentLocation().name());
         };
 
         this.addLocation = function () {
@@ -169,7 +219,7 @@ var markers = [];
             if (!filter) {
                 return self.locationList();
             } else {
-                return ko.utils.arrayFilter(self.locationList(), function (item) {
+                return filteredArr = ko.utils.arrayFilter(self.locationList(), function (item) {
                     return ko.utils.stringStartsWith(item.name().toLowerCase(), filter);
                 });
             }
@@ -181,9 +231,11 @@ $(document).ready(function(){
     ko.applyBindings(new ViewModel());
 });
 
+// Add the missing knockout utility function to see if a string start with a substring
 ko.utils.stringStartsWith = function (string, startsWith) {
     string = string || "";
-    if (startsWith.length > string.length)
+    if (startsWith.length > string.length){
         return false;
+    }
     return string.substring(0, startsWith.length) === startsWith;
 };

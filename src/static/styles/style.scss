@@ -125,9 +125,15 @@ footer span {
   }
 }
 
+.container {
+  outline: 1px solid red;
+  width: 1000px;
+  margin: 0 auto;
+  padding: 40px;
+}
 
 
 #map {
-  width: 300px;
-  height: 300px;
+  width: 600px;
+  height: 600px;
 }
