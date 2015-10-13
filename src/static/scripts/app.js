@@ -18,9 +18,9 @@ window.addEventListener("load", function(event) {
     // MODEL
 
     var initialLocations = [
-        "San Francisco, USA",
+        "San Francisco",
         "Taipei",
-        "Tailand"
+        "Thailand"
     ];
 
     var Location = function(data){
@@ -80,20 +80,22 @@ var markers = [];
               markers = [];
           }
 
-         function addMarker(place){
+          function addMarker(place){
            var lat = place.geometry.location.lat();
            var lon = place.geometry.location.lng();
-           var name = place.formatted_address;
+           var formattedAddress = place.formatted_address;
            var bounds = window.mapBounds;
-
+           var activeIcon = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+           var inactiveIcon = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
 
            // marker is an object with additional data about the pin for a single location
            var marker = new google.maps.Marker({
                map: map,
-               icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+               icon: inactiveIcon,
                animation: google.maps.Animation.DROP,
                position: place.geometry.location,
-               title: name
+               title: formattedAddress,
+               name: place.name
            });
 
              markers.push(marker);
@@ -113,47 +115,42 @@ var markers = [];
                '</div>'+
                '</div>';
 
-          function toggleBounce(){
-              console.log('toggleBounce');
-
-              if(marker.getAnimation() !== null){
-                 marker.setAnimation(null);
-             }else{
-                 marker.setAnimation(google.maps.Animation.BOUNCE);
-             }
-          }
-
-           var infoWindow = new google.maps.InfoWindow({
+           marker.infoWindow = new google.maps.InfoWindow({
              content: contentString,
              maxWidth: 200
            });
 
-             google.maps.event.addListener(marker, 'click', function() {
-                 marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
-                 marker.isSelected = true;
-                 infoWindow.open(map, marker);
-                 currentMarker = marker;
+              marker.toggleBounce = function(){
+                  //console.log('toggleBounce');
+                  var self = this;
+                  if(!self.isSelected){
+                      self.setAnimation(null);
+                  }else{
+                      self.setAnimation(google.maps.Animation.BOUNCE);
+                  }
+              }
 
-                 toggleBounce();
+
+
+              google.maps.event.addListener(marker, 'click', function() {
+                 bindingContext.$data.activateMarker(marker);
              });
 
-             google.maps.event.addListener(infoWindow,'closeclick',function(){
+             google.maps.event.addListener(marker.infoWindow,'closeclick',function(){
                  // currentMarker.setMap(null); //removes the marker
                  // then, remove the infowindows name from the array
                  // marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
-                 toggleBounce();
-                 marker.isSelected = false;
-                 marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+                 bindingContext.$data.deactivateMarker(marker);
              });
 
              google.maps.event.addListener(marker, 'mouseover', function() {
-                 console.log('mouseover');
-                 marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+                 //console.log('mouseover');
+                 marker.setIcon(activeIcon);
              });
 
              google.maps.event.addListener(marker, 'mouseout', function() {
                  if(!marker.isSelected){
-                     marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+                     marker.setIcon(inactiveIcon);
                  }
              });
 
@@ -164,30 +161,17 @@ var markers = [];
       }
     };
 
-    ko.bindingHandlers.setLocation = {
-        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            var place = ko.unwrap(valueAccessor());
-            var allBindings = allBindingsAccessor();
-            element.addEventListener('click', function(){
-                console.log('click:');
-                console.log(place.name());
-            });
-        },
-
-        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-        }
-    }
-
     // ViewModel
     var ViewModel = function() {
         var self = this;
 
         this.newLocation = ko.observable();
-        this.searchString = ko.observable('Tai');
+        this.searchString = ko.observable('');
 
         this.locationList = ko.observableArray([]);
-        //this.filteredArr =  ko.observableArray([]);
+        this.filteredArr =  ko.observableArray([]);
 
+        this.currentMarker = null;
 
         self.locationList = ko.observableArray(ko.utils.arrayMap(initialLocations, function(locationItem){
             return new Location(locationItem)
@@ -211,7 +195,6 @@ var markers = [];
             if (!match) {
                 self.locationList.push(new Location(place));
             };
-
         }
 
         this.filterLocations = ko.dependentObservable(function () {
@@ -219,11 +202,42 @@ var markers = [];
             if (!filter) {
                 return self.locationList();
             } else {
-                return filteredArr = ko.utils.arrayFilter(self.locationList(), function (item) {
+                return self.filteredArr = ko.utils.arrayFilter(self.locationList(), function (item) {
                     return ko.utils.stringStartsWith(item.name().toLowerCase(), filter);
                 });
             }
         });
+
+        this.activateThisMarker = function(place){
+            for(var i=0; i<markers.length; i++){
+                var marker = markers[i];
+
+                if(place() == marker.name){
+                    self.activateMarker(marker);
+                    console.log('match found: ' + marker.name);
+                }else{
+                    self.deactivateMarker(marker);
+                }
+            }
+        }
+
+
+
+        this.activateMarker = function(marker){
+            marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+            marker.isSelected = true;
+            marker.infoWindow.open(map, marker);
+            map.currentMarker = marker;
+            marker.toggleBounce();
+        }
+
+        this.deactivateMarker = function(marker){
+            marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+            marker.isSelected = false;
+            marker.infoWindow.close();
+            map.currentMarker = null;
+            marker.toggleBounce();
+        }
     }
 
 
