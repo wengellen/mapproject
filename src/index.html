@@ -26,26 +26,25 @@
     </div>
     <div id="search">
       <input type="text" placeholder="Search" name="search-input"
-             data-bind="textInput: searchString"
+             data-bind="textInput: searchString, event:{change: addMarkers} "
               style="outline-color: red">
-<!--
-      <button id="search-btn" data-bind="filterList: searchString">Search</button>
--->
-
+      <button id="clear-btn" data-bind="click: clearSearch">Clear</button>
 
     </div>
   </div>
-  <div class="map-container" >
+  <main class="main" >
+    <nav class="nav" >
+      <ul id="marker-ilst" data-bind="foreach: filterLocations">
+        <li >
+          <a href="#" class="list-item" data-bind="text: name, click: $parent.activateThisMarker(name)"></a>
+        </li>
+      </ul>
+    </nav>
     <div id="map" data-bind="map: filterLocations" >
     </div>
-  </div>
 
-  <div class="marker-list-container" style="float:left">
-    <ul id="marker-ilst" data-bind="foreach: filterLocations">
-      <li data-bind="text: name, click: $parent.activateThisMarker(name)">
-      </li>
-    </ul>
-  </div>
+  </main>
+
 
   <footer>
     <p>&copy; Favoite Place Map Project 2015 <span id="crp-stats"></span></p>
