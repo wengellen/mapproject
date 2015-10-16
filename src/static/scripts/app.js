@@ -29,6 +29,7 @@ window.addEventListener("load", function(event) {
 
 var map;
 var markers = [];
+var nav = $('.nav');
 
   ko.bindingHandlers.map = {
       init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
@@ -36,37 +37,59 @@ var markers = [];
 
           var mapOptions = {
               zoom: 12,
+              disableDefaultUI: true,
               mapTypeId: google.maps.MapTypeId.ROADMAP
           };
 
           map = new google.maps.Map(element, mapOptions);
-          var chicago = {lat: 41.85, lng: -87.65};
 
           function FullScreen(controlDiv, map){
               // Set CSS for the control border.
               var controlUI = document.createElement('div');
               controlUI.classList.add('map-button');
-              controlUI.title = 'Click to recenter the map';
+              controlUI.title = 'Click to show controls';
               controlDiv.appendChild(controlUI);
 
               // Set CSS for the control interior.
               var controlText = document.createElement('div');
               controlText.classList.add('map-button-text');
-              controlText.innerHTML = 'Center Map';
               controlUI.appendChild(controlText);
-
               // Setup the click event listeners: simply set the map to Chicago.
-              controlUI.addEventListener('click', function() {
-                  map.setCenter(chicago);
-              });
+
+
+              map.showControls = function(){
+                  console.log('showControl');
+                  controlText.innerHTML = 'Hide';
+                  controlUI.removeEventListener('click', map.showControls);
+                  controlUI.addEventListener('click', map.hideControls);
+
+                  var nav = document.querySelector('.nav');
+                  nav.classList.remove('hidden');
+                  nav.classList.add('visible');
+              }
+
+              map.hideControls = function(){
+                  console.log('hideControl');
+
+                  controlText.innerHTML = 'Show';
+                  controlUI.removeEventListener('click', map.hideControls);
+                  controlUI.addEventListener('click', map.showControls);
+
+                  var nav = document.querySelector('.nav');
+                  nav.classList.remove('visible');
+                  nav.classList.add('hidden');
+              }
+
+              map.hideControls();
           }
+
 
           // Create the DIV to hold the control and call the CenterControl() constructor
           // passing in this DIV.
           var centerControlDiv = document.createElement('div');
           var centerControl = new FullScreen(centerControlDiv, map);
           centerControlDiv.index = 1;
-          map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+          map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
 
           var service = new google.maps.places.PlacesService(map);
           window.mapBounds = new google.maps.LatLngBounds();
@@ -102,6 +125,13 @@ var markers = [];
             self.currentLocation(data);
             console.log(self.currentLocation().name());
         };
+
+        this.closeControls = function(){
+            console.log('close');
+            map.hideControls();
+        };
+
+
 
         this.addLocation = function () {
             console.log('addLocation called');
@@ -203,7 +233,7 @@ var markers = [];
             // Wikipedia Ajax request goes here
             var wikiHtmlString;
 
-            var wikiUrl = 'http://en.wikipedia.org/w/api231.php?action=opensearch&search=' + marker.name + '' +
+            var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + marker.name + '' +
                 '&format=json&callback=wikiCallback';
 
              var wikiRequestTimeout = setTimeout(function () {
@@ -239,7 +269,7 @@ var markers = [];
                         '</div>'+
                         '</div>';
 
-                    // clearTimeout(wikiRequestTimeout);
+                    clearTimeout(wikiRequestTimeout);
                     console.log(contentString);
                     marker.infoWindow.setContent(contentString);
                 }

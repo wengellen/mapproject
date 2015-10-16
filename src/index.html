@@ -14,7 +14,7 @@
 
 <body>
 <header class="header">
-  <h1>Find your favorite place on map</h1>
+  <h4>Find your favorite place on map</h4>
   <div id="search">
     <input type="text" placeholder="Search" name="search-input" id="search-input"
            data-bind="textInput: searchString, event:{change: addMarkers} "
@@ -24,38 +24,35 @@
 </header>
 
 <div class="container">
-
-  <main class="main" >
-    <nav class="nav" >
-      <div class="search-container">
-        <div id="addPlace">
+    <nav class="nav hidden">
+      <div class="nav-inner">
+          <h4>Add your favorite place</h4>
+          <button class="close-btn" data-bind="click:closeControls"></button>
+        <div class="add-place-container">
           <input type="text" placeholder="Tokyo" name="add-input"
                  data-bind="value: newLocation" >
           <button id="add-btn" class="btn-large" data-bind="click: addLocation">Add</button>
         </div>
+        <ul id="marker-ilst" data-bind="foreach: filterLocations">
+          <li >
+            <a href="#" class="list-item" data-bind="text: name, click: $parent.activateThisMarker(name)"></a>
+          </li>
+        </ul>
       </div>
-      <ul id="marker-ilst" data-bind="foreach: filterLocations">
-        <li >
-          <a href="#" class="list-item" data-bind="text: name, click: $parent.activateThisMarker(name)"></a>
-        </li>
-      </ul>
     </nav>
-
-    <div id="map" data-bind="map: filterLocations" >
-    </div>
-  </main>
+   <div id="map" data-bind="map: filterLocations" >
+  </div>
 
 
   <footer>
     <p>&copy; Favoite Place Map Project 2015 <span id="crp-stats"></span></p>
   </footer>
 
-  <div id="debug" style="clear:both">
+  <!--<div id="debug" style="clear:both">
     <hr />
     <h3>Debug</h3>
     <div data-bind="text: ko.toJSON(locationList)"></div>
-  </div>
-
+  </div>-->
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
   <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?libraries=places"></script>
