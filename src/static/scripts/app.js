@@ -27,7 +27,7 @@ window.addEventListener("load", function(event) {
       this.name = ko.observable(data);
     };
 
-    var map;
+var map;
 var markers = [];
 
   ko.bindingHandlers.map = {
@@ -35,16 +35,43 @@ var markers = [];
           var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
 
           var mapOptions = {
-              zoom: 6,
-              disableDefaultUI: true
+              zoom: 12,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
           };
 
           map = new google.maps.Map(element, mapOptions);
+          var chicago = {lat: 41.85, lng: -87.65};
+
+          function FullScreen(controlDiv, map){
+              // Set CSS for the control border.
+              var controlUI = document.createElement('div');
+              controlUI.classList.add('map-button');
+              controlUI.title = 'Click to recenter the map';
+              controlDiv.appendChild(controlUI);
+
+              // Set CSS for the control interior.
+              var controlText = document.createElement('div');
+              controlText.classList.add('map-button-text');
+              controlText.innerHTML = 'Center Map';
+              controlUI.appendChild(controlText);
+
+              // Setup the click event listeners: simply set the map to Chicago.
+              controlUI.addEventListener('click', function() {
+                  map.setCenter(chicago);
+              });
+          }
+
+          // Create the DIV to hold the control and call the CenterControl() constructor
+          // passing in this DIV.
+          var centerControlDiv = document.createElement('div');
+          var centerControl = new FullScreen(centerControlDiv, map);
+          centerControlDiv.index = 1;
+          map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
           var service = new google.maps.places.PlacesService(map);
           window.mapBounds = new google.maps.LatLngBounds();
 
-          bindingContext.$data.addMarkers(locationList);
+          //bindingContext.$data.addMarkers(locationList);
       },
       update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
           var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
@@ -125,6 +152,7 @@ var markers = [];
         this.activateMarker = function(marker){
             marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
             marker.isSelected = true;
+            self.setInfoWindow(marker);
             marker.infoWindow.open(map, marker);
             map.currentMarker = marker;
             marker.toggleBounce();
@@ -140,7 +168,6 @@ var markers = [];
 
         this.clearMarkers = function(){
             self.setMapOnAll(null);
-            console.log('hideMarkers')
         }
 
         this.deleteMarkers = function(){
@@ -155,51 +182,15 @@ var markers = [];
         }
 
         this.addMarkers = function(locObj){
-            /*if(typeof(locObj)!='ko.observableArray'){
-
-            }*/
-            //var locationList = self.locationList();
-          /*  console.log(self.filteredArr.length);
-            if(self.filteredArr.length > 0){
-                locationList = self.filteredArr;
-                self.hideMarkers();
-            }*/
-
             var service = new google.maps.places.PlacesService(map);
             var request;
-            /*locationList.subscribe(function(changes){
-                changes.forEach(function(change) {
-                    if (change.status === 'added') {
-                        console.log("Added or removed! The added/removed element is:", change.value);
-                        var location = change.value;
-                        var request = {
-                            query: location.name()
-                        };
-
-                        service.textSearch(request, callback);
-
-                    }
-                });
-            }, null, 'arrayChange');
-*/
-            console.log('addMarkers');
-           /* if(isObservableArray(locObj)){
-                console.log('inside locObj:', locObj.name)
+            for(var place in locObj){
                 request = {
-                    query: locObj.name
+                    query: locObj[place].name()
                 };
+                console.log(locObj[place].name());
                 service.textSearch(request, callback);
-            }else{*/
-                console.log('inside locationList')
-                for(var place in locObj){
-                    request = {
-                        query: locObj[place].name()
-                    };
-                    console.log(locObj[place].name())
-                    service.textSearch(request, callback);
-                }
-
-            //}
+            }
 
             function callback(result, status){
                 if(status === google.maps.places.PlacesServiceStatus.OK){
@@ -208,45 +199,80 @@ var markers = [];
             }
         }
 
-        this.addMarker = function(place){
-                var lat = place.geometry.location.lat();
-                var lon = place.geometry.location.lng();
-                var formattedAddress = place.formatted_address;
-                var bounds = window.mapBounds;
-                var activeIcon = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
-                var inactiveIcon = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        this.setInfoWindow = function(marker){
+            // Wikipedia Ajax request goes here
+            var wikiHtmlString;
 
-                // marker is an object with additional data about the pin for a single location
-                var marker = new google.maps.Marker({
-                    map: map,
-                    icon: inactiveIcon,
-                    animation: google.maps.Animation.DROP,
-                    position: place.geometry.location,
-                    title: formattedAddress,
-                    name: place.name
-                });
+            var wikiUrl = 'http://en.wikipedia.org/w/api231.php?action=opensearch&search=' + marker.name + '' +
+                '&format=json&callback=wikiCallback';
 
-                markers.push(marker);
+             var wikiRequestTimeout = setTimeout(function () {
+                 wikiHtmlString = "Failed to get wikipedia resources";
+                 marker.infoWindow.setContent(wikiHtmlString);
 
-                var contentString = '<div id="content" >'+
-                    '<div id="siteNotice">'+
-                    '</div>'+
-                    '<h1 id="firstHeading" class="firstHeading">'+ name +'</h1>'+
-                    '<div id="bodyContent">'+
-                    '<p><b>Uluru</b>, also referred to as <b>Ayers Rock</b>, is a large ' +
-                    'sandstone rock formation in the southern part of the '+
-                    'Northern Territory, central Australia. ' +
-                    'Heritage Site.</p>'+
-                    '<p>Attribution: Uluru, <a href="https://en.wikipedia.org/w/index.php?title=Uluru&oldid=297882194">'+
-                    'https://en.wikipedia.org/w/index.php?title=Uluru</a> '+
-                    '(last visited June 22, 2009).</p>'+
-                    '</div>'+
-                    '</div>';
+             }, 8000);
 
-                marker.infoWindow = new google.maps.InfoWindow({
-                    content: contentString,
-                    maxWidth: 200
-                });
+            $.ajax({
+                url: wikiUrl,
+                dataType: 'jsonp',
+                //jsonp: 'callback', // DEFAULT callback name
+                success: function (response) {
+                    var title = response[1][0];
+                    var body = response[2][0];
+                    var url = 'http://en.wikipedia.org/wiki/' + title;
+
+
+                    wikiHtmlString ='<a href="' + url + '">' +
+                    title + '</a>' +
+                    '<div>' + body + '</div>';
+
+                    var contentString = '<div id="content" >'+
+                        '<div id="siteNotice">'+
+                        '</div>'+
+                        '<h1 id="firstHeading" class="firstHeading">'+ marker.name +'</h1>'+
+                        '<div id="bodyContent">'+
+                        '<a href="' + url + '" target="_blank">' +
+                        title + '</a>' +
+                        '<button>Street View</button>' +
+                        '<div>' + body + '</div>' +
+
+                        '</div>'+
+                        '</div>';
+
+                    // clearTimeout(wikiRequestTimeout);
+                    console.log(contentString);
+                    marker.infoWindow.setContent(contentString);
+                }
+            });
+
+        }
+
+
+
+
+        this.addMarker = function(place) {
+            var lat = place.geometry.location.lat();
+            var lon = place.geometry.location.lng();
+            var formattedAddress = place.formatted_address;
+            var bounds = window.mapBounds;
+            var activeIcon = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+            var inactiveIcon = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+
+            // marker is an object with additional data about the pin for a single location
+            var marker = new google.maps.Marker({
+                map: map,
+                icon: inactiveIcon,
+                animation: google.maps.Animation.DROP,
+                position: place.geometry.location,
+                title: formattedAddress,
+                name: place.name
+            });
+
+
+                marker.infoWindow = new google.maps.InfoWindow(
+                    {
+                        content: "<i class='fa fa-spinner fa-spin fa-lg' style='color: #FFA46B;' title='Loading...'></i> Loading...",
+                        maxWidth: 200});
 
                 marker.toggleBounce = function(){
                     //console.log('toggleBounce');
@@ -257,6 +283,10 @@ var markers = [];
                         self.setAnimation(google.maps.Animation.BOUNCE);
                     }
                 }
+
+
+             markers.push(marker);
+
 
                 google.maps.event.addListener(marker, 'click', function() {
                     self.activateMarker(marker);
