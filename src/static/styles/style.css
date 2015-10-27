@@ -1,6 +1,7 @@
 * {
   margin: 0;
-  padding: 0; }
+  padding: 0;
+  box-sizing: border-box; }
 
 html {
   font-size: 100%;
@@ -60,7 +61,7 @@ input[type='text'] {
   transition: transform 0.3s;
   will-change: transform;
   top: 0;
-  left: -100%;
+  left: -250px;
   width: 250px;
   height: 100%;
   background-color: rgba(0, 0, 51, 0.5);
@@ -69,7 +70,7 @@ input[type='text'] {
   text-align: center;
   color: white; }
   .nav.visible {
-    transform: translateX(100vw); }
+    transform: translateX(250px); }
   .nav.hidden {
     transform: translateX(0); }
   .nav li {

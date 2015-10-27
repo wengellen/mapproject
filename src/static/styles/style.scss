@@ -1,6 +1,7 @@
 * {
    margin: 0;
    padding: 0;
+   box-sizing: border-box;
 }
 
 html {
@@ -75,7 +76,7 @@ input[type='text'] {
   transition: transform 0.3s;
   will-change: transform;
   top: 0;
-  left: -100%;
+  left: -250px;
   width: 250px;
   height: 100%;
   background-color: rgba(#000033, 0.5);
@@ -85,7 +86,7 @@ input[type='text'] {
   color: white;
 
   &.visible{
-    transform: translateX(100vw);
+    transform: translateX(250px);
   }
 
   &.hidden{

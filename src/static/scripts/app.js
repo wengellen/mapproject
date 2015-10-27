@@ -33,7 +33,8 @@ var nav = $('.nav');
 
   ko.bindingHandlers.map = {
       init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
+          //var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
+          var locationList = ko.unwrap(valueAccessor()); //ko.unwrap(valueAccessor());
 
           var mapOptions = {
               zoom: 12,
@@ -97,8 +98,11 @@ var nav = $('.nav');
           //bindingContext.$data.addMarkers(locationList);
       },
       update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
-          bindingContext.$data.deleteMarkers();
+          //var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
+          var locationList = ko.unwrap(valueAccessor());
+          bindingContext.$data.clearMarkers();
+          console.log('map update');
+          console.log(locationList);
           bindingContext.$data.addMarkers(locationList);
       }
   }
@@ -110,7 +114,7 @@ var nav = $('.nav');
 
         this.newLocation = ko.observable();
         this.searchString = ko.observable('');
-        this.filteredArr  = ko.observableArray([]);
+        this.filteredList  = ko.observableArray([]);
         this.locationList = ko.observableArray([]);
 
         this.currentMarker = null;
@@ -131,11 +135,8 @@ var nav = $('.nav');
             map.hideControls();
         };
 
-
-
         this.addLocation = function () {
             console.log('addLocation called');
-            self.clearSearch();
             var place = self.newLocation();
 
             var match = ko.utils.arrayFirst(self.locationList(), function (item) {
@@ -143,26 +144,35 @@ var nav = $('.nav');
             });
             if (!match) {
                 var locObject = new Location(place);
-                self.locationList.push(new Location(place));
-                //self.currentLocation(locObject);
-                //self.addMarkers(locObject);
+                console.log(locObject);
+                self.addToList(locObject);
+                //self.deleteMarkers();
+                self.addThisMarker(locObject);
             }
+        }
+
+        this.addToList = function(locObject){
+            self.locationList.push(locObject);
+            self.filterLocations().push();
+            var loc = self.filterLocations();
+            console.log(loc);
         }
 
         this.clearSearch = function(){
             self.searchString('');
         }
 
-        this.filterLocations = ko.dependentObservable(function () {
+        this.filterLocations = ko.computed(function () {
             var filter = self.searchString().toLowerCase();
             if (!filter) {
+                self.filterdList = self.locationList;
                 return self.locationList();
             } else {
-                self.filteredArr = ko.utils.arrayFilter(self.locationList(), function (item) {
+                arr =  ko.utils.arrayFilter(self.locationList(), function (item) {
                     return ko.utils.stringStartsWith(item.name().toLowerCase(), filter);
                 });
-                console.log(self.filteredArr);
-                return self.filteredArr;
+                return arr;
+                //return ko.observableArray([arr]);
             }
         });
 
@@ -211,21 +221,30 @@ var nav = $('.nav');
             }
         }
 
+        this.addThisMarker = function(locObj){
+            var service = new google.maps.places.PlacesService(map);
+            var request;
+            request = {
+                query: locObj.name()
+            };
+            //console.log(locObj.name());
+            service.textSearch(request, callback);
+        }
+
         this.addMarkers = function(locObj){
             var service = new google.maps.places.PlacesService(map);
             var request;
-            for(var place in locObj){
+            locObj.forEach(function(place){
                 request = {
-                    query: locObj[place].name()
+                    query: place.name()
                 };
-                console.log(locObj[place].name());
                 service.textSearch(request, callback);
-            }
+            });
+        };
 
-            function callback(result, status){
-                if(status === google.maps.places.PlacesServiceStatus.OK){
-                    self.addMarker(result[0]);
-                }
+        function callback(result, status){
+            if(status === google.maps.places.PlacesServiceStatus.OK){
+                self.addMarker(result[0]);
             }
         }
 
@@ -262,23 +281,16 @@ var nav = $('.nav');
                         '<h1 id="firstHeading" class="firstHeading">'+ marker.name +'</h1>'+
                         '<div id="bodyContent">'+
                         '<a href="' + url + '" target="_blank">' +
-                        title + '</a>' +
-                        '<button>Street View</button>' +
-                        '<div>' + body + '</div>' +
-
+                         'Read More...</a>' +
+                        '<div style="color:#777">' + body + '</div>' +
                         '</div>'+
                         '</div>';
 
                     clearTimeout(wikiRequestTimeout);
-                    console.log(contentString);
                     marker.infoWindow.setContent(contentString);
                 }
             });
-
         }
-
-
-
 
         this.addMarker = function(place) {
             var lat = place.geometry.location.lat();
@@ -298,11 +310,11 @@ var nav = $('.nav');
                 name: place.name
             });
 
-
                 marker.infoWindow = new google.maps.InfoWindow(
-                    {
-                        content: "<i class='fa fa-spinner fa-spin fa-lg' style='color: #FFA46B;' title='Loading...'></i> Loading...",
-                        maxWidth: 200});
+                {
+                  content: "<i class='fa fa-spinner fa-spin fa-lg' style='color: #FFA46B;' title='Loading...'></i> Loading...",
+                  maxWidth: 200
+                });
 
                 marker.toggleBounce = function(){
                     //console.log('toggleBounce');
@@ -314,9 +326,7 @@ var nav = $('.nav');
                     }
                 }
 
-
-             markers.push(marker);
-
+                markers.push(marker);
 
                 google.maps.event.addListener(marker, 'click', function() {
                     self.activateMarker(marker);
@@ -342,7 +352,6 @@ var nav = $('.nav');
 
                 bounds.extend(new google.maps.LatLng(lat, lon));
                 map.fitBounds(bounds);
-
              }
         }
 
