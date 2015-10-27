@@ -98,31 +98,33 @@ input[type='text'] {
     background-color: rgba(white, 0.5);
     border-radius: 2px;
     padding: 4px 0;
-  }
 
-  a {
-    word-wrap: normal;
-    color: #003333;
-
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.2s ease-in;
-
-    &:focus,
-    &:hover,
-    &:active
-    {
+    &.active{
       color: white;
-      /*border-top-left-radius: 4px;
-      border-top-right-radius: 4px;*/
-      outline: 0;
     }
   }
-
 }
 
-.active {
-  color: tomato;
+.list-item {
+  word-wrap: normal;
+  color: #003333;
+
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.2s ease-in;
+
+  &.active {
+    color: white;
+  }
+
+  &:focus,
+  &:hover,
+  &:active
+  {
+    /*border-top-left-radius: 4px;
+    border-top-right-radius: 4px;*/
+    outline: 0;
+  }
 }
 
 

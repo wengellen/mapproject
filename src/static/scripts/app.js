@@ -101,6 +101,7 @@ var nav = $('.nav');
           //bindingContext.$data.clearMarkers();
           console.log('map update');
           console.log(locationList);
+          bindingContext.$data.filterMarkers();
           //bindingContext.$data.addMarkers(locationList);
       }
   }
@@ -132,8 +133,15 @@ var nav = $('.nav');
             map.hideControls();
         };
 
+        /**
+         *  Called when add-btn is clicked
+         *  It adds the location object to the list and the map
+         */
         this.addLocation = function () {
-            console.log('addLocation called');
+            // reset the search query so that you can see the newly
+            // added list item and marker
+            self.clearSearch();
+
             var place = self.newLocation();
 
             var match = ko.utils.arrayFirst(self.locationList(), function (item) {
@@ -149,10 +157,22 @@ var nav = $('.nav');
         this.addToList = function(locObject){
             self.locationList.push(locObject);
             self.filterLocations();
-            var loc = self.filterLocations();
-            console.log(loc);
         }
 
+
+        this.addThisMarker = function(locObj){
+            var service = new google.maps.places.PlacesService(map);
+            var request;
+            request = {
+                query: locObj.name()
+            };
+            service.textSearch(request, callback);
+        }
+
+        /**
+         *  Called when clear button in the search bar is clicked
+         *  It nulls the text input value
+         */
         this.clearSearch = function(){
             self.searchString('');
         }
@@ -169,18 +189,47 @@ var nav = $('.nav');
             }
         });
 
+        /**
+         * Called during Map's update phase to show/hide markers
+         * based on searched query string
+         */
+        this.filterMarkers = function(){
+            var service = new google.maps.places.PlacesService(map);
+            for( var i = 0; i < markers.length; i++){
+                var marker = markers[i];
+                if(!matchQuery(marker)){
+                    self.hideMarker(marker);
+                }else{
+                    self.showMarker(marker);
+                }
+            }
+        };
+
+        /**
+         * Helper method to find out if the marker matches the search query
+         * @param marker
+         * @returns {boolean}
+         */
         function matchQuery(marker) {
             var filter = self.searchString().toLowerCase();
             return ko.utils.stringStartsWith(marker['name'].toLowerCase(), filter);
         };
 
-        this.activateThisMarker = function(place){
+
+        /**
+         * Called when location list item is clicekd.
+         * @param place location object
+         */
+        this.selectThisPlace = function(place){
             for(var i=0; i<markers.length; i++){
                 var marker = markers[i];
                 self.deactivateMarker(marker);
+                self.selectItem(marker, false);
 
                 if(place() === marker.name){
                     self.activateMarker(marker);
+                    self.selectItem(marker, true);
+
                     console.log('match found: ' + marker.name);
                 }
             }
@@ -234,14 +283,6 @@ var nav = $('.nav');
             }
         }
 
-        this.addThisMarker = function(locObj){
-            var service = new google.maps.places.PlacesService(map);
-            var request;
-            request = {
-                query: locObj.name()
-            };
-            service.textSearch(request, callback);
-        }
 
         this.addMarkers = function(locObj){
             var service = new google.maps.places.PlacesService(map);
@@ -259,30 +300,6 @@ var nav = $('.nav');
                 self.addMarker(result[0]);
             }
         }
-
-        this.filterMarkers = function(){
-            var service = new google.maps.places.PlacesService(map);
-            for( var i = 0; i < markers.length; i++){
-                var marker = markers[i];
-                if(!matchQuery(marker)){
-                    self.hideMarker(marker);
-                }else{
-                    self.showMarker(marker);
-                }
-            }
-        };
-
-        function filterCallback(result, status){
-            if(status === google.maps.places.PlacesServiceStatus.OK){
-                placeName = result[0]['name'];
-                if(matchQuery(placeName)){
-                    self.showMarker(placeName);
-                }else{
-                    self.hideMarker(placeName);
-                }
-            }
-        }
-
 
         this.setInfoWindow = function(marker){
             // Wikipedia Ajax request goes here
@@ -328,6 +345,26 @@ var nav = $('.nav');
             });
         }
 
+        /**
+         * Called when marker is clicked
+         * It highlight the list item with matching name
+         * @param marker
+         */
+        this.selectItem = function(marker, isTrue){
+            var list = self.filterLocations();
+            var $items = document.getElementsByClassName('list-item');
+            for(var i=0; i< $items.length; i++){
+                if($items[i].textContent === marker['name']){
+                    if(isTrue){
+                        $items[i].classList.add('active');
+                    }else{
+                        $items[i].classList.remove('active');
+
+                    }
+                }
+            }
+        }
+
         this.addMarker = function(place) {
             var lat = place.geometry.location.lat();
             var lon = place.geometry.location.lng();
@@ -366,6 +403,8 @@ var nav = $('.nav');
 
                 google.maps.event.addListener(marker, 'click', function() {
                     self.activateMarker(marker);
+                    self.selectItem(marker, true);
+
                 });
 
                 google.maps.event.addListener(marker.infoWindow,'closeclick',function(){
@@ -373,6 +412,7 @@ var nav = $('.nav');
                     // then, remove the infowindows name from the array
                     // marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
                     self.deactivateMarker(marker);
+                    self.selectItem(marker, false);
                 });
 
                 google.maps.event.addListener(marker, 'mouseover', function() {

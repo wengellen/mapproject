@@ -78,20 +78,21 @@ input[type='text'] {
     background-color: rgba(255, 255, 255, 0.5);
     border-radius: 2px;
     padding: 4px 0; }
-  .nav a {
-    word-wrap: normal;
-    color: #003333;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.2s ease-in; }
-    .nav a:focus, .nav a:hover, .nav a:active {
-      color: white;
-      /*border-top-left-radius: 4px;
-      border-top-right-radius: 4px;*/
-      outline: 0; }
+    .nav li.active {
+      color: white; }
 
-.active {
-  color: tomato; }
+.list-item {
+  word-wrap: normal;
+  color: #003333;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.2s ease-in; }
+  .list-item.active {
+    color: white; }
+  .list-item:focus, .list-item:hover, .list-item:active {
+    /*border-top-left-radius: 4px;
+    border-top-right-radius: 4px;*/
+    outline: 0; }
 
 html, body, .container, .main, #map {
   width: 100%;

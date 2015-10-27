@@ -17,7 +17,7 @@
   <h4>Find your favorite place on map</h4>
   <div id="search">
     <input type="text" placeholder="Search" name="search-input" id="search-input"
-           data-bind="textInput: searchString, event:{keyup: filterMarkers} "
+           data-bind="textInput: searchString"
            style="outline-color: red">
     <button id="clear-btn" class="btn-large" data-bind="click: clearSearch">Clear</button>
   </div>
@@ -35,7 +35,7 @@
         </div>
         <ul id="marker-ilst" data-bind="foreach: filterLocations">
           <li >
-            <a href="#" class="list-item" data-bind="text: name, click: $parent.activateThisMarker(name)"></a>
+            <a href="#" class="list-item" data-bind="text: name, click: $parent.selectThisPlace(name)"></a>
           </li>
         </ul>
       </div>
