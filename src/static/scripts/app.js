@@ -33,8 +33,7 @@ var nav = $('.nav');
 
   ko.bindingHandlers.map = {
       init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          //var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
-          var locationList = ko.unwrap(valueAccessor()); //ko.unwrap(valueAccessor());
+          var locationList = ko.unwrap(valueAccessor());
 
           var mapOptions = {
               zoom: 12,
@@ -90,20 +89,19 @@ var nav = $('.nav');
           var centerControlDiv = document.createElement('div');
           var centerControl = new FullScreen(centerControlDiv, map);
           centerControlDiv.index = 1;
-          map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
+          map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
           var service = new google.maps.places.PlacesService(map);
           window.mapBounds = new google.maps.LatLngBounds();
 
-          //bindingContext.$data.addMarkers(locationList);
+          bindingContext.$data.addMarkers(locationList);
       },
       update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          //var locationList = ko.unwrap(bindingContext.$data.filterLocations); //ko.unwrap(valueAccessor());
           var locationList = ko.unwrap(valueAccessor());
-          bindingContext.$data.clearMarkers();
+          //bindingContext.$data.clearMarkers();
           console.log('map update');
           console.log(locationList);
-          bindingContext.$data.addMarkers(locationList);
+          //bindingContext.$data.addMarkers(locationList);
       }
   }
 
@@ -114,7 +112,6 @@ var nav = $('.nav');
 
         this.newLocation = ko.observable();
         this.searchString = ko.observable('');
-        this.filteredList  = ko.observableArray([]);
         this.locationList = ko.observableArray([]);
 
         this.currentMarker = null;
@@ -144,16 +141,14 @@ var nav = $('.nav');
             });
             if (!match) {
                 var locObject = new Location(place);
-                console.log(locObject);
                 self.addToList(locObject);
-                //self.deleteMarkers();
                 self.addThisMarker(locObject);
             }
         }
 
         this.addToList = function(locObject){
             self.locationList.push(locObject);
-            self.filterLocations().push();
+            self.filterLocations();
             var loc = self.filterLocations();
             console.log(loc);
         }
@@ -165,29 +160,31 @@ var nav = $('.nav');
         this.filterLocations = ko.computed(function () {
             var filter = self.searchString().toLowerCase();
             if (!filter) {
-                self.filterdList = self.locationList;
                 return self.locationList();
             } else {
                 arr =  ko.utils.arrayFilter(self.locationList(), function (item) {
                     return ko.utils.stringStartsWith(item.name().toLowerCase(), filter);
                 });
                 return arr;
-                //return ko.observableArray([arr]);
             }
         });
+
+        function matchQuery(marker) {
+            var filter = self.searchString().toLowerCase();
+            return ko.utils.stringStartsWith(marker['name'].toLowerCase(), filter);
+        };
 
         this.activateThisMarker = function(place){
             for(var i=0; i<markers.length; i++){
                 var marker = markers[i];
+                self.deactivateMarker(marker);
 
-                if(place() == marker.name){
+                if(place() === marker.name){
                     self.activateMarker(marker);
                     console.log('match found: ' + marker.name);
-                }else{
-                    self.deactivateMarker(marker);
                 }
             }
-        }
+        };
 
         this.activateMarker = function(marker){
             marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
@@ -196,7 +193,7 @@ var nav = $('.nav');
             marker.infoWindow.open(map, marker);
             map.currentMarker = marker;
             marker.toggleBounce();
-        }
+        };
 
         this.deactivateMarker = function(marker){
             marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
@@ -204,7 +201,23 @@ var nav = $('.nav');
             marker.infoWindow.close();
             map.currentMarker = null;
             marker.toggleBounce();
-        }
+        };
+
+        this.showMarker = function(marker){
+            for( var i = 0; i < markers.length; i++){
+                if(markers[i] == marker){
+                    markers[i].setMap(map);
+                }
+            }
+        };
+
+        this.hideMarker = function(marker){
+            for( var i = 0; i < markers.length; i++){
+                if(markers[i] == marker){
+                    markers[i].setMap(null);
+                }
+            }
+        };
 
         this.clearMarkers = function(){
             self.setMapOnAll(null);
@@ -227,7 +240,6 @@ var nav = $('.nav');
             request = {
                 query: locObj.name()
             };
-            //console.log(locObj.name());
             service.textSearch(request, callback);
         }
 
@@ -247,6 +259,30 @@ var nav = $('.nav');
                 self.addMarker(result[0]);
             }
         }
+
+        this.filterMarkers = function(){
+            var service = new google.maps.places.PlacesService(map);
+            for( var i = 0; i < markers.length; i++){
+                var marker = markers[i];
+                if(!matchQuery(marker)){
+                    self.hideMarker(marker);
+                }else{
+                    self.showMarker(marker);
+                }
+            }
+        };
+
+        function filterCallback(result, status){
+            if(status === google.maps.places.PlacesServiceStatus.OK){
+                placeName = result[0]['name'];
+                if(matchQuery(placeName)){
+                    self.showMarker(placeName);
+                }else{
+                    self.hideMarker(placeName);
+                }
+            }
+        }
+
 
         this.setInfoWindow = function(marker){
             // Wikipedia Ajax request goes here

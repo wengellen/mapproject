@@ -17,7 +17,7 @@
   <h4>Find your favorite place on map</h4>
   <div id="search">
     <input type="text" placeholder="Search" name="search-input" id="search-input"
-           data-bind="textInput: searchString, event:{change: addMarkers} "
+           data-bind="textInput: searchString, event:{keyup: filterMarkers} "
            style="outline-color: red">
     <button id="clear-btn" class="btn-large" data-bind="click: clearSearch">Clear</button>
   </div>
