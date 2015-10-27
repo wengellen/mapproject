@@ -117,7 +117,7 @@ var nav = $('.nav');
         this.currentMarker = null;
 
         self.locationList = ko.observableArray(ko.utils.arrayMap(initialLocations, function(locationItem){
-            return new Location(locationItem)
+            return new Location(locationItem);
         }));
 
         this.currentLocation = ko.observable(self.locationList()[0]);
@@ -144,19 +144,19 @@ var nav = $('.nav');
             var place = self.newLocation();
 
             var match = ko.utils.arrayFirst(self.locationList(), function (item) {
-                return place == item.name();
+                return place === item.name();
             });
             if (!match) {
                 var locObject = new Location(place);
                 self.addToList(locObject);
                 self.addThisMarker(locObject);
             }
-        }
+        };
 
         this.addToList = function(locObject){
             self.locationList.push(locObject);
             self.filterLocations();
-        }
+        };
 
 
         this.addThisMarker = function(locObj){
@@ -211,7 +211,7 @@ var nav = $('.nav');
          */
         function matchQuery(marker) {
             var filter = self.searchString().toLowerCase();
-            return ko.utils.stringStartsWith(marker['name'].toLowerCase(), filter);
+            return ko.utils.stringStartsWith(marker.name.toLowerCase(), filter);
         }
 
 
@@ -257,7 +257,7 @@ var nav = $('.nav');
          */
         this.showMarker = function(marker){
             for( var i = 0; i < markers.length; i++){
-                if(markers[i] == marker){
+                if(markers[i] === marker){
                     markers[i].setMap(map);
                     self.deactivateMarker(marker);
                 }
@@ -362,7 +362,7 @@ var nav = $('.nav');
             var list = self.filterLocations();
             var $items = document.getElementsByClassName('list-item');
             for(var i=0; i< $items.length; i++){
-                if($items[i].textContent === marker['name']){
+                if($items[i].textContent === marker.name){
                     if(isTrue){
                         $items[i].classList.add('active');
                     }else{
@@ -436,7 +436,7 @@ var nav = $('.nav');
 
                 bounds.extend(new google.maps.LatLng(lat, lon));
                 map.fitBounds(bounds);
-             }
+             };
         };
 
 

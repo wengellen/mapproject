@@ -270,7 +270,7 @@ var nav = $('.nav');
          */
         this.hideMarker = function(marker){
             for( var i = 0; i < markers.length; i++){
-                if(markers[i] == marker){
+                if(markers[i] === marker){
                     markers[i].setMap(null);
                 }
             }
