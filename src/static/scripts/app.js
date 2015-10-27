@@ -217,7 +217,7 @@ var nav = $('.nav');
 
 
         /**
-         * Called when location list item is clicekd.
+         * Called when location list item is clicked.
          * @param place location object
          */
         this.selectThisPlace = function(place){
@@ -252,14 +252,23 @@ var nav = $('.nav');
             marker.toggleBounce();
         };
 
+        /**
+         * Make this marker visible and default to be not active
+         * @param marker marker object
+         */
         this.showMarker = function(marker){
             for( var i = 0; i < markers.length; i++){
                 if(markers[i] == marker){
                     markers[i].setMap(map);
+                    self.deactivateMarker(marker);
                 }
             }
         };
 
+        /**
+         * Make this marker invisible
+         * @param marker
+         */
         this.hideMarker = function(marker){
             for( var i = 0; i < markers.length; i++){
                 if(markers[i] == marker){
