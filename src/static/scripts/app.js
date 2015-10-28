@@ -14,9 +14,11 @@ window.addEventListener("load", function(event) {
 });
 
 
-    // MODEL
+//-------------
+//  MODEL
+//-------------
 
-    var initialLocations = [
+var initialLocations = [
         "San Francisco",
         "Taipei",
         "Thailand"
@@ -26,84 +28,89 @@ window.addEventListener("load", function(event) {
       this.name = ko.observable(data);
     };
 
+// Google Map reference
 var map;
+
+// Arrays to hold the markers
 var markers = [];
 var nav = $('.nav');
 
-  ko.bindingHandlers.map = {
-      init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          var locationList = ko.unwrap(valueAccessor());
+// Custom Binding for google map
+ko.bindingHandlers.map = {
+  init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+      var locationList = ko.unwrap(valueAccessor());
 
-          var mapOptions = {
-              zoom: 12,
-              disableDefaultUI: true,
-              mapTypeId: google.maps.MapTypeId.ROADMAP
+      var mapOptions = {
+          zoom: 12,
+          disableDefaultUI: true,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+      };
+
+      map = new google.maps.Map(element, mapOptions);
+
+      /**
+       * Add center control to Map
+       * It can move location list window off and on the screen
+       * @param controlDiv
+       * @param map Google Map Map object
+       * @constructor
+       */
+      function FullScreen(controlDiv, map){
+          // Set CSS for the control border.
+          var controlUI = document.createElement('div');
+          controlUI.classList.add('map-button');
+          controlUI.title = 'Click to show controls';
+          controlDiv.appendChild(controlUI);
+
+          // Set CSS for the control interior.
+          var controlText = document.createElement('div');
+          controlText.classList.add('map-button-text');
+          controlUI.appendChild(controlText);
+
+          map.showControls = function(){
+              console.log('showControl');
+              controlText.innerHTML = 'Hide';
+              controlUI.removeEventListener('click', map.showControls);
+              controlUI.addEventListener('click', map.hideControls);
+
+              var nav = document.querySelector('.nav');
+              nav.classList.remove('hidden');
+              nav.classList.add('visible');
           };
 
-          map = new google.maps.Map(element, mapOptions);
+          map.hideControls = function(){
+              console.log('hideControl');
 
-          function FullScreen(controlDiv, map){
-              // Set CSS for the control border.
-              var controlUI = document.createElement('div');
-              controlUI.classList.add('map-button');
-              controlUI.title = 'Click to show controls';
-              controlDiv.appendChild(controlUI);
+              controlText.innerHTML = 'Show';
+              controlUI.removeEventListener('click', map.hideControls);
+              controlUI.addEventListener('click', map.showControls);
 
-              // Set CSS for the control interior.
-              var controlText = document.createElement('div');
-              controlText.classList.add('map-button-text');
-              controlUI.appendChild(controlText);
-              // Setup the click event listeners: simply set the map to Chicago.
+              var nav = document.querySelector('.nav');
+              nav.classList.remove('visible');
+              nav.classList.add('hidden');
+          };
 
-
-              map.showControls = function(){
-                  console.log('showControl');
-                  controlText.innerHTML = 'Hide';
-                  controlUI.removeEventListener('click', map.showControls);
-                  controlUI.addEventListener('click', map.hideControls);
-
-                  var nav = document.querySelector('.nav');
-                  nav.classList.remove('hidden');
-                  nav.classList.add('visible');
-              };
-
-              map.hideControls = function(){
-                  console.log('hideControl');
-
-                  controlText.innerHTML = 'Show';
-                  controlUI.removeEventListener('click', map.hideControls);
-                  controlUI.addEventListener('click', map.showControls);
-
-                  var nav = document.querySelector('.nav');
-                  nav.classList.remove('visible');
-                  nav.classList.add('hidden');
-              };
-
-              map.hideControls();
-          }
-
-
-          // Create the DIV to hold the control and call the CenterControl() constructor
-          // passing in this DIV.
-          var centerControlDiv = document.createElement('div');
-          var centerControl = new FullScreen(centerControlDiv, map);
-          centerControlDiv.index = 1;
-          map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
-
-          var service = new google.maps.places.PlacesService(map);
-          window.mapBounds = new google.maps.LatLngBounds();
-
-          bindingContext.$data.addMarkers(locationList);
-      },
-      update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-          var locationList = ko.unwrap(valueAccessor());
-          //bindingContext.$data.clearMarkers();
-          console.log('map update');
-          console.log(locationList);
-          bindingContext.$data.filterMarkers();
-          //bindingContext.$data.addMarkers(locationList);
+          map.hideControls();
       }
-  };
+
+      // Create the DIV to hold the control and call the CenterControl() constructor
+      // passing in this DIV.
+      var centerControlDiv = document.createElement('div');
+      var centerControl = new FullScreen(centerControlDiv, map);
+      centerControlDiv.index = 1;
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
+
+      var service = new google.maps.places.PlacesService(map);
+      window.mapBounds = new google.maps.LatLngBounds();
+
+      // Add initial markers to map.
+      bindingContext.$data.addMarkers(locationList);
+  },
+  update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+      var locationList = ko.unwrap(valueAccessor());
+      bindingContext.$data.filterMarkers();
+  }
+};
 
 
     // ViewModel
@@ -120,7 +127,8 @@ var nav = $('.nav');
             return new Location(locationItem);
         }));
 
-        this.currentLocation = ko.observable(self.locationList()[0]);
+        //this.currentLocation = ko.observable(self.locationList()[0]);
+        this.currentLocation = ko.observable(new Location({name:''}));
 
         this.setCurrentLocation = function (data) {
             self.currentLocation(data);
@@ -148,8 +156,10 @@ var nav = $('.nav');
             });
             if (!match) {
                 var locObject = new Location(place);
+                self.setCurrentLocation(locObject);
                 self.addToList(locObject);
                 self.addThisMarker(locObject);
+
             }
         };
 
@@ -223,12 +233,9 @@ var nav = $('.nav');
             for(var i=0; i<markers.length; i++){
                 var marker = markers[i];
                 self.deactivateMarker(marker);
-                self.selectItem(marker, false);
 
                 if(place() === marker.name){
                     self.activateMarker(marker);
-                    self.selectItem(marker, true);
-
                     console.log('match found: ' + marker.name);
                 }
             }
@@ -241,6 +248,8 @@ var nav = $('.nav');
             marker.infoWindow.open(map, marker);
             map.currentMarker = marker;
             marker.toggleBounce();
+
+            self.selectItem(marker, true);
         };
 
         this.deactivateMarker = function(marker){
@@ -249,6 +258,8 @@ var nav = $('.nav');
             marker.infoWindow.close();
             map.currentMarker = null;
             marker.toggleBounce();
+
+            self.selectItem(marker, false);
         };
 
         /**
@@ -407,12 +418,15 @@ var nav = $('.nav');
                     }
                 };
 
+                // If it's the newly added place, activate it
+                if(place.name === self.currentLocation().name()){
+                    self.activateMarker(marker);
+                }
+
                 markers.push(marker);
 
                 google.maps.event.addListener(marker, 'click', function() {
                     self.activateMarker(marker);
-                    self.selectItem(marker, true);
-
                 });
 
                 google.maps.event.addListener(marker.infoWindow,'closeclick',function(){
@@ -420,7 +434,7 @@ var nav = $('.nav');
                     // then, remove the infowindows name from the array
                     // marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
                     self.deactivateMarker(marker);
-                    self.selectItem(marker, false);
+
                 });
 
                 google.maps.event.addListener(marker, 'mouseover', function() {
