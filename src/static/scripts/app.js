@@ -141,7 +141,7 @@ var ViewModel = function() {
      * @type {*|any}
      */
     this.validPlace = ko.computed(function (){
-        return self.newLocation() != '';
+        return self.newLocation() !== '';
     });
 
     /**
