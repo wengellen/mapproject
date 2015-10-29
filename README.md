@@ -1,7 +1,7 @@
 ## Neighborhood Map Project
 
 
-This is a website created for **Udacity's Front End Developor Nanodegree Program** that utilizes Goolge Map.
+This is a website created for **Udacity's Front End Developor Nanodegree Program** that utilizes Google Map.
 
 
 ### Demo
