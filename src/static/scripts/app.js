@@ -106,7 +106,7 @@ ko.bindingHandlers.map = {
 var ViewModel = function() {
     var self = this;
 
-    this.newLocation = ko.observable();
+    this.newLocation = ko.observable('');
 
     // Search string to filter the locations
     this.searchString = ko.observable('');
@@ -135,11 +135,24 @@ var ViewModel = function() {
         map.hideControls();
     };
 
+
+    /**
+     * Flag to see if location entered is valid
+     * @type {*|any}
+     */
+    this.validPlace = ko.computed(function (){
+        return self.newLocation() != '';
+    });
+
     /**
      *  Called when add-btn is clicked
      *  It adds the location object to the list and the map
      */
     this.addLocation = function () {
+        if(!self.validPlace()){
+            return;
+        }
+
         // reset the search query so that you can see the newly
         // added list item and marker
         self.clearSearch();
@@ -174,7 +187,10 @@ var ViewModel = function() {
             addToList(locObject);
             addThisMarker(locObject);
         }
+
+        self.newLocation('');
     };
+
 
     /**
      *  Called when clear button in the search bar is clicked

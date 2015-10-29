@@ -23,7 +23,7 @@
           <h4>Add your favorite place</h4>
           <div class="add-place-inner input-div">
             <input type="text" placeholder="Place Name" name="add-input"
-                   data-bind="value: newLocation" >
+                   data-bind="value: newLocation, event:{change:addLocation}"  >
             <button id="add-btn" class="btn-large" data-bind="click: addLocation">Add</button>
           </div>
         </div>
