@@ -528,7 +528,7 @@ module.exports = function(grunt) {
         'clean:pub',
         'copy',
         'js',
-        'css',
+        'refresh',
         'cleanup',
         'concurrent'
     ]);
