@@ -124,14 +124,48 @@ var ViewModel = function() {
     };
 
     /**
-     *  Called when add-close-btn is clicked
      *  It moves location list offscreen
      */
     this.closeControls = function(){
-        //map.hideControls();
         nav.classList.toggle('visible');
     };
 
+    this.initAutoComplete = function(){
+        console.log('initAutoComplete');
+        $('#add-input').autocomplete({
+            source: function( request, response){
+                console.log(request);
+
+                $.ajax({
+                    url: "http://gd.geobytes.com/AutoCompleteCity",
+                    dataType: 'jsonp',
+                    data: {
+                        q: request.term
+                    },
+                    success: function(data){
+                        response(data);
+                    }
+                })
+            },
+            minLength: 3,
+            select: function(event, ui){
+                console.log( ui.item );
+                console.log( ui.item ?
+                "Selected: " + ui.item.label :
+                "Nothing selected, input was " + this.value);
+                cityString = ui.item.label;
+                cityArr = cityString.split(',');
+                self.newLocation(cityArr[0]);
+                self.addLocation(cityArr[0]);
+            },
+            open: function() {
+                $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+            },
+            close: function() {
+                $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+            }
+        });
+    }(self);
 
     /**
      * Flag to see if location entered is valid
@@ -499,6 +533,7 @@ var ViewModel = function() {
 
 $(document).ready(function(){
     ko.applyBindings(new ViewModel());
+
 });
 
 // Add the missing knockout utility function to see if a string start with a substring

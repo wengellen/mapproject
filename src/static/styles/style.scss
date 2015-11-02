@@ -116,8 +116,8 @@ input[type='text'] {
   transition: transform 0.3s;
   will-change: transform;
   top: 34px;
-  left: -250px;
-  width: 250px;
+  left: -300px;
+  width: 300px;
   height: calc(100% - 34px);
   background-color: rgba(#000033, 0.5);
   border: 1px solid #000033;
@@ -125,7 +125,7 @@ input[type='text'] {
   color: white;
 
   &.visible{
-    transform: translateX(250px);
+    transform: translateX(300px);
   }
 
   &.hidden{
@@ -181,6 +181,7 @@ input[type='text'] {
   display: flex;
   flex-flow: column;
   padding: 6px;
+  width: 100%;
   height: 100%;
 }
 
@@ -198,10 +199,10 @@ input[type='text'] {
   }
 
   input{
-    width: 64%;
+    width: 70%;
   }
   button{
-    width: 30%;
+    width: 23%;
   }
 }
 
