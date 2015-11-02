@@ -105,6 +105,11 @@ var ViewModel = function() {
     // Default the currentLocation to have a name of empty string
     this.currentLocation = ko.observable(new Location({name:''}));
 
+    /**
+     * Move he nav panel in and out of view
+     * @param item the item which dispatched the event
+     * @param event the event being dispathced
+     */
     this.toggleNav = function(item, event){
         console.log('toggleNav');
         nav.classList.toggle('visible');
@@ -123,7 +128,8 @@ var ViewModel = function() {
      *  It moves location list offscreen
      */
     this.closeControls = function(){
-        map.hideControls();
+        //map.hideControls();
+        nav.classList.toggle('visible');
     };
 
 
@@ -180,6 +186,7 @@ var ViewModel = function() {
         }
 
         self.newLocation('');
+        self.closeControls();
     };
 
 
