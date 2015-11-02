@@ -249,6 +249,17 @@ var ViewModel = function() {
         }
     };
 
+    this.selectThisMarker = function(marker){
+        for(var i=0; i<markers.length; i++){
+            markerItem = markers[i];
+            self.deactivateMarker(markerItem);
+
+            if(markerItem === marker){
+                self.activateMarker(marker);
+                console.log('match found: ' + marker.name);
+            }
+        }
+    }
     /**
      * Activate a marker
      * @param marker map marker
@@ -448,7 +459,7 @@ var ViewModel = function() {
         markers.push(marker);
 
         google.maps.event.addListener(marker, 'click', function() {
-            self.activateMarker(marker);
+            self.selectThisMarker(marker);
         });
 
         google.maps.event.addListener(marker.infoWindow,'closeclick',function(){
