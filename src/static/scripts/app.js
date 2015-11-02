@@ -19,7 +19,7 @@ var map;
 
 // Arrays to hold the markers
 var markers = [];
-var nav = $('.nav');
+var nav = document.querySelector('.nav');
 
 // Custom Binding for google map
 ko.bindingHandlers.map = {
@@ -44,7 +44,7 @@ ko.bindingHandlers.map = {
        * @param map Google Map Map object
        * @constructor
        */
-      function FullScreen(controlDiv, map){
+      function CenterControl(controlDiv, map) {
           // Set CSS for the control border.
           var controlUI = document.createElement('div');
           controlUI.classList.add('map-button');
@@ -56,36 +56,21 @@ ko.bindingHandlers.map = {
           controlText.classList.add('map-button-text');
           controlUI.appendChild(controlText);
 
-          map.showControls = function(){
-              console.log('showControl');
-              controlText.innerHTML = 'Hide Panel';
-              controlUI.removeEventListener('click', map.showControls);
-              controlUI.addEventListener('click', map.hideControls);
+          controlText.innerHTML = 'Center Map';
+          controlUI.addEventListener('click', function(){
+              // TODO: need to contain all markers
+              var center = map.getCenter();
+              console.log(center);
+              google.maps.event.trigger(map, "resize");
 
-              var nav = document.querySelector('.nav');
-              nav.classList.remove('hidden');
-              nav.classList.add('visible');
-          };
-
-          map.hideControls = function(){
-              console.log('hideControl');
-
-              controlText.innerHTML = 'Show Panel';
-              controlUI.removeEventListener('click', map.hideControls);
-              controlUI.addEventListener('click', map.showControls);
-
-              var nav = document.querySelector('.nav');
-              nav.classList.remove('visible');
-              nav.classList.add('hidden');
-          };
-
-          map.hideControls();
+              map.setCenter(center);
+          });
       }
 
       // Create the DIV to hold the control and call the CenterControl() constructor
       // passing in this DIV.
       var centerControlDiv = document.createElement('div');
-      var centerControl = new FullScreen(centerControlDiv, map);
+      var centerControl = new CenterControl(centerControlDiv, map);
       centerControlDiv.index = 1;
       map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
@@ -119,6 +104,12 @@ var ViewModel = function() {
 
     // Default the currentLocation to have a name of empty string
     this.currentLocation = ko.observable(new Location({name:''}));
+
+    this.toggleNav = function(item, event){
+        console.log('toggleNav');
+        nav.classList.toggle('visible');
+        event.stopPropagation();
+    };
 
     /**
      *  Store reference to the last added location
@@ -476,6 +467,7 @@ var ViewModel = function() {
 
         //google.maps.event.addDomListener(window, 'load', initialize);
         google.maps.event.addDomListener(window, "resize", function() {
+            console.log('resize');
             var center = map.getCenter();
             google.maps.event.trigger(map, "resize");
             map.setCenter(center);
