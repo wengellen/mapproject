@@ -166,7 +166,7 @@ var ViewModel = function() {
                     success: function(data){
                         response(data);
                     }
-                })
+                });
             },
             minLength: 3,
             select: function(event, ui){
@@ -450,7 +450,7 @@ var ViewModel = function() {
             dataType: 'jsonp',
             async: true
         }).done(function(response){
-            console.log('success')
+            console.log('success');
             var title = response[1][0];
             var body = response[2][0];
             var url = baseUrl + '/wiki/' + title;
