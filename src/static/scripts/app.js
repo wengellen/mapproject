@@ -6,8 +6,9 @@
 var initialLocations = [
         "San Francisco",
         "Taipei",
-        "Thailand",
-        "Brazil"
+        "London",
+        "Johannesburg",
+        "Mumbai"
     ];
 
     var Location = function(data){
@@ -20,6 +21,7 @@ var map;
 // Arrays to hold the markers
 var markers = [];
 var nav = document.querySelector('.nav');
+var menu_icon = document.querySelector('.menu_icon');
 
 // Custom Binding for google map
 ko.bindingHandlers.map = {
@@ -114,6 +116,16 @@ var ViewModel = function() {
         console.log('toggleNav');
         nav.classList.toggle('visible');
         event.stopPropagation();
+        console.log(menu_icon);
+        // Swap out Menu button
+        if(menu_icon.classList.contains('contract')){
+            menu_icon.classList.remove('contract');
+            menu_icon.classList.add('expand');
+        }else{
+            menu_icon.classList.remove('expand');
+            menu_icon.classList.add('contract');
+        }
+
     };
 
     /**
@@ -124,12 +136,17 @@ var ViewModel = function() {
     };
 
     /**
-     *  It moves location list offscreen
+     *  It moves location list off screen
      */
     this.closeControls = function(){
-        nav.classList.toggle('visible');
+        nav.classList.remove('visible');
+        menu_icon.classList.remove('expand');
+        menu_icon.classList.add('contract');
     };
 
+    /**
+     * City name autoComplete jquery widget
+     */
     this.initAutoComplete = function(){
         console.log('initAutoComplete');
         $('#add-input').autocomplete({
@@ -149,10 +166,7 @@ var ViewModel = function() {
             },
             minLength: 3,
             select: function(event, ui){
-                console.log( ui.item );
-                console.log( ui.item ?
-                "Selected: " + ui.item.label :
-                "Nothing selected, input was " + this.value);
+                // Add this city to list
                 cityString = ui.item.label;
                 cityArr = cityString.split(',');
                 self.newLocation(cityArr[0]);
@@ -311,8 +325,11 @@ var ViewModel = function() {
         self.setInfoWindow(marker);
         marker.infoWindow.open(map, marker);
         marker.toggleBounce();
+        var latLng = marker.getPosition();
+        map.setCenter(latLng);
 
         self.selectItem(marker, true);
+
     };
 
     /**
@@ -410,10 +427,16 @@ var ViewModel = function() {
                 title + '</a>' +
                 '<div>' + body + '</div>';
 
+                var nameArr = marker.title.split(',');
+                var city = nameArr[0];
+                var country = nameArr[nameArr.length - 1];
+
                 var contentString = '<div id="content" >'+
                     '<div id="siteNotice">'+
                     '</div>'+
-                    '<h1 id="firstHeading" class="firstHeading">'+ marker.name +'</h1>'+
+                    '<h1 id="firstHeading" class="firstHeading">'+ city +
+                        '<span id="secondHeading" class="secondHeading">'+ country +'</span>'+
+                    '</h1>'+
                     '<div id="bodyContent">'+
                     '<a href="' + url + '" target="_blank">' +
                      'Read More...</a>' +
@@ -501,6 +524,7 @@ var ViewModel = function() {
 
         google.maps.event.addListener(marker, 'click', function() {
             self.selectThisMarker(marker);
+            self.closeControls();
         });
 
         google.maps.event.addListener(marker.infoWindow,'closeclick',function(){
@@ -509,6 +533,7 @@ var ViewModel = function() {
 
         google.maps.event.addListener(marker, 'mouseover', function() {
             marker.setIcon(activeIcon);
+            console.log(marker)
         });
 
         google.maps.event.addListener(marker, 'mouseout', function() {

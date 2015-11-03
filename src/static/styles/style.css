@@ -74,11 +74,24 @@ input[type='text'] {
 #header__menu {
   display: inline-block;
   position: absolute;
-  left: 0.4em; }
-  #header__menu svg {
-    width: 32px;
-    height: 32px;
-    fill: #E0E0E0; }
+  left: 0.4em;
+  cursor: initial; }
+
+.menu_icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  text-indent: -10000px;
+  border-radius: 0;
+  fill: #E0E0E0;
+  transition: all 0.5s ease; }
+  .menu_icon:hover {
+    transform: scale(1.1, 1.1); }
+  .menu_icon.contract {
+    background: url(../images/ic_hamburglar_24px.svg) center center no-repeat; }
+  .menu_icon.expand {
+    fill: #E0E0E0;
+    background: url(../images/ic_close_24px.svg) center center no-repeat; }
 
 /*  Main content
 --------------*/
@@ -106,7 +119,7 @@ input[type='text'] {
   .nav.hidden {
     transform: translateX(0); }
   .nav ul {
-    padding: 0 6px 6px 6px;
+    padding: 0 8px 12px 8px;
     flex: 1;
     -webkit-overflow-scrolling: touch;
     max-height: 64vh;
@@ -199,6 +212,10 @@ input[type='text'] {
   line-height: 38px;
   padding-left: 15px;
   padding-right: 15px; }
+
+/* Marker InfoWindow */
+.secondHeading {
+  color: #a9a9a9; }
 
 @media screen and (max-width: 400px) {
   .main {

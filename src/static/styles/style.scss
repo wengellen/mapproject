@@ -84,22 +84,36 @@ input[type='text'] {
   }
 }
 
-.header__menu {
-  //display: none;
-}
-
 #header__menu {
   display: inline-block;
   position: absolute;
   left: 0.4em;
-  //padding: 0 10vw;
-  svg {
-    width: 32px;
-    height: 32px;
-    fill: #E0E0E0;
+  cursor: initial;
+}
 
+.menu_icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  text-indent: -10000px;
+  border-radius: 0;
+  fill: #E0E0E0;
+  transition: all 0.5s ease;
+
+  &:hover {
+    transform: scale(1.1, 1.1);
+  }
+
+  &.contract {
+    background: url(../images/ic_hamburglar_24px.svg) center center no-repeat;
+  }
+
+  &.expand {
+    fill: #E0E0E0;
+    background: url(../images/ic_close_24px.svg) center center no-repeat;
   }
 }
+
 
 /*  Main content
 --------------*/
@@ -133,7 +147,7 @@ input[type='text'] {
   }
 
   ul{
-    padding: 0 6px 6px 6px;
+    padding: 0 8px 12px 8px;
     flex: 1;
     -webkit-overflow-scrolling: touch;
     max-height: 64vh;
@@ -255,6 +269,12 @@ input[type='text'] {
   line-height: 38px;
   padding-left: 15px;
   padding-right: 15px;
+}
+
+/* Marker InfoWindow */
+.secondHeading {
+  color: #a9a9a9;
+  //font-size: 20px;
 }
 
 @media screen and (max-width: 400px) {
