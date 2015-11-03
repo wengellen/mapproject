@@ -271,13 +271,14 @@ input[type='text'] {
   padding-right: 15px;
 }
 
+
 /* Marker InfoWindow */
 .secondHeading {
   color: #a9a9a9;
-  //font-size: 20px;
 }
 
 @media screen and (max-width: 400px) {
+
   .main {
     flex-flow: row;
   }
@@ -293,8 +294,9 @@ input[type='text'] {
   }
 
   .nav{
+    height: 100vh;
     ul{
-      max-height: 30vh;
+      max-height: 216px;
       overflow-y: auto;
     }
   }
@@ -307,5 +309,28 @@ input[type='text'] {
     font-size: 14px;
     line-height: 24px;
     padding: 3px 10px;
+  }
+
+
+  /* SCROLL BAR (show by default) */
+  ::-webkit-scrollbar {
+    width: 8px !important;
+  }
+
+  ::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 2px rgba(0,0,0,0.4) !important;
+    -webkit-border-radius: 2px !important;
+    border-radius: 2px !important;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 2px !important;
+    border-radius: 2px !important;
+    background: rgba(white, 0.2) !important;
+    -webkit-box-shadow: inset 0 0 2px rgba(0,0,0,0.5) !important;
+
+  }
+  ::-webkit-scrollbar-thumb:window-inactive {
+    background: rgba(white, 0.1) !important;
   }
 }

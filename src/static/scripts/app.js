@@ -22,6 +22,7 @@ var map;
 var markers = [];
 var nav = document.querySelector('.nav');
 var menu_icon = document.querySelector('.menu_icon');
+var markerList = document.getElementsByClassName('marker-list');
 
 // Custom Binding for google map
 if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multiselect) {
@@ -212,7 +213,7 @@ var ViewModel = function() {
         function addToList(locObject){
             self.locationList.push(locObject);
             self.filterLocations();
-        }
+         }
 
         // Make a place service request
         function addThisMarker(locObj){
@@ -246,6 +247,9 @@ var ViewModel = function() {
         self.newLocation('');
         self.closeControls();
 
+        // TODO: scroll the list to the last added item
+        // Not working right now.
+        markerList.scrollTop = markerList.scrollHeight;
     };
 
 
