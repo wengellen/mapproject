@@ -292,15 +292,20 @@ input[type='text'] {
     }
   }
 
-  .nav {
-
+  .nav{
+    ul{
+      max-height: 30vh;
+      overflow-y: auto;
+    }
   }
 
   .nav-inner{
    width: 100%;
   }
 
-  .map-button {
-    display: none;
+  .map-button-text {
+    font-size: 14px;
+    line-height: 24px;
+    padding: 3px 10px;
   }
 }

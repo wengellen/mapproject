@@ -54,17 +54,34 @@
       </div>
     </nav>
 
-   <div id="map" data-bind="map: filterLocations" ></div>
+   <div id="map" data-bind="map:filterLocations"></div>
 
   <footer class="footer">
     <p>Copyright &copy; 2015 Favoite Place Google Map Project</p>
   </footer>
 </div>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-  <script src="http://maps.googleapis.com/maps/api/js?libraries=places"></script>
-  <script src="./static/scripts/lib/knockout-3.2.0.js"></script>
-  <script src="./static/scripts/app.js"></script>
+<script>
+  function googleSuccess() {
+    console.log('google loaded');
+    if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multiselect) {
+      ko.applyBindings(new ViewModel());
+    }
+  }
+
+  function googleError() {
+    console.log('google error');
+    var paragraph = document.createElement('p');
+    paragraph.innerHTML = 'There is a problem contacting google map service. Please try again later';
+    var body = document.getElementsByTagName('body')[0];
+    body.appendChild(paragraph);
+  }
+
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="./static/scripts/lib/knockout-3.2.0.js"></script>
+<script src="./static/scripts/app.js"></script>
+<script src="http://maps.googleapis.com/maps/api/js?libraries=places&callback=googleSuccess" onerror="googleError()" async defer></script>
 <body>
 </html>

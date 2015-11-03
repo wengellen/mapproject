@@ -24,71 +24,72 @@ var nav = document.querySelector('.nav');
 var menu_icon = document.querySelector('.menu_icon');
 
 // Custom Binding for google map
-ko.bindingHandlers.map = {
-  init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-      var locationList = ko.unwrap(valueAccessor());
+if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multiselect) {
+    ko.bindingHandlers.map = {
+        init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            var locationList = bindingContext.$data.filterLocations();
+            //var locationList = ko.unwrap(valueAccessor());
 
-      // This is the minimum zoom level that we'll allow
-      var minZoomLevel = 0;
+            // This is the minimum zoom level that we'll allow
+            var minZoomLevel = 0;
 
-      var mapOptions = {
-          zoom: minZoomLevel,
-          disableDefaultUI: true,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-      };
+            var mapOptions = {
+                zoom: minZoomLevel,
+                disableDefaultUI: true,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
 
-      map = new google.maps.Map(element, mapOptions);
+            map = new google.maps.Map(element, mapOptions);
 
-      /**
-       * Add center control to Map
-       * It can move location list window off and on the screen
-       * @param controlDiv
-       * @param map Google Map Map object
-       * @constructor
-       */
-      function CenterControl(controlDiv, map) {
-          // Set CSS for the control border.
-          var controlUI = document.createElement('div');
-          controlUI.classList.add('map-button');
-          controlUI.title = 'Click to show controls';
-          controlDiv.appendChild(controlUI);
+            /**
+             * Add center control to Map
+             * It can move location list window off and on the screen
+             * @param controlDiv
+             * @param map Google Map Map object
+             * @constructor
+             */
+            function CenterControl(controlDiv, map) {
+                // Set CSS for the control border.
+                var controlUI = document.createElement('div');
+                controlUI.classList.add('map-button');
+                controlUI.title = 'Click to show controls';
+                controlDiv.appendChild(controlUI);
 
-          // Set CSS for the control interior.
-          var controlText = document.createElement('div');
-          controlText.classList.add('map-button-text');
-          controlUI.appendChild(controlText);
+                // Set CSS for the control interior.
+                var controlText = document.createElement('div');
+                controlText.classList.add('map-button-text');
+                controlUI.appendChild(controlText);
 
-          controlText.innerHTML = 'Center Map';
-          controlUI.addEventListener('click', function(){
-              // TODO: need to contain all markers
-              var center = map.getCenter();
-              console.log(center);
-              google.maps.event.trigger(map, "resize");
+                controlText.innerHTML = 'Center';
+                controlUI.addEventListener('click', function () {
+                    // TODO: need to contain all markers
+                    //google.maps.event.trigger(map, "resize");
+                    bindingContext.$data.fitMap();
+                    bindingContext.$data.deactivateMarker(bindingContext.$data.currentMarker());
+                });
+            }
 
-              map.setCenter(center);
-          });
-      }
+            // Create the DIV to hold the control and call the CenterControl() constructor
+            // passing in this DIV.
+            var centerControlDiv = document.createElement('div');
+            var centerControl = new CenterControl(centerControlDiv, map);
+            centerControlDiv.index = 1;
+            map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
-      // Create the DIV to hold the control and call the CenterControl() constructor
-      // passing in this DIV.
-      var centerControlDiv = document.createElement('div');
-      var centerControl = new CenterControl(centerControlDiv, map);
-      centerControlDiv.index = 1;
-      map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+            var service = new google.maps.places.PlacesService(map);
+            window.mapBounds = new google.maps.LatLngBounds();
 
-      var service = new google.maps.places.PlacesService(map);
-      window.mapBounds = new google.maps.LatLngBounds();
+            // Add initial markers to map.
+            bindingContext.$data.addMarkers(locationList);
+        },
 
-      // Add initial markers to map.
-      bindingContext.$data.addMarkers(locationList);
-  },
-
-  update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-      var locationList = ko.unwrap(valueAccessor());
-      bindingContext.$data.filterMarkers();
-  }
-};
-
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+            //var locationList = ko.unwrap(valueAccessor());
+            //bindingContext.$data.filterMarkers();
+            var locationList = bindingContext.$data.filterLocations();
+        }
+    };
+}
 // ViewModel
 var ViewModel = function() {
     var self = this;
@@ -97,6 +98,9 @@ var ViewModel = function() {
 
     // Search string to filter the locations
     this.searchString = ko.observable('');
+
+    // Store current selected marker
+    this.currentMarker = ko.observable({});
 
     // List to hold the locations
     //this.locationList = ko.observableArray([]);
@@ -231,10 +235,17 @@ var ViewModel = function() {
             self.setCurrentLocation(locObject);
             addToList(locObject);
             addThisMarker(locObject);
+
+            // zoom in to city
+            var latLng = self.currentMarker().getPosition();
+            map.setCenter(latLng);
+            map.setZoom(4);
+            self.offsetMap();
         }
 
         self.newLocation('');
         self.closeControls();
+
     };
 
 
@@ -302,6 +313,7 @@ var ViewModel = function() {
                 console.log('match found: ' + marker.name);
             }
         }
+        self.closeControls();
     };
 
     this.selectThisMarker = function(marker){
@@ -314,23 +326,39 @@ var ViewModel = function() {
                 console.log('match found: ' + marker.name);
             }
         }
-    }
+        self.closeControls();
+    };
+
+    /**
+     * Offset marker by this value
+     */
+    this.offsetMap = function(){
+        map.panBy(0, -80);
+    };
+
+
     /**
      * Activate a marker
      * @param marker map marker
      */
     this.activateMarker = function(marker){
+        self.currentMarker(marker);
         marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
         marker.isSelected = true;
         self.setInfoWindow(marker);
         marker.infoWindow.open(map, marker);
         marker.toggleBounce();
+
+        // zoom in to city
         var latLng = marker.getPosition();
         map.setCenter(latLng);
+        map.setZoom(4);
+        self.offsetMap();
 
         self.selectItem(marker, true);
 
     };
+
 
     /**
      * Deactivate a marker
@@ -341,7 +369,6 @@ var ViewModel = function() {
         marker.isSelected = false;
         marker.infoWindow.close();
         marker.toggleBounce();
-
         self.selectItem(marker, false);
     };
 
@@ -405,51 +432,56 @@ var ViewModel = function() {
      */
     this.setInfoWindow = function(marker){
         var wikiHtmlString;
-
-        var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + marker.name + '' +
+        var baseUrl = 'http://en.wikipedia.org/';
+        var wikiUrl = baseUrl + '/w/api.php?action=opensearch&search=' + marker.name + '' +
             '&format=json&callback=wikiCallback';
 
+        // ** [NOTE to reviewer] **:
+        // Jsonp ajax request won't trigger a error/fail response,
+        // So the workaround is to use timeout to mimic a fail response.
          var wikiRequestTimeout = setTimeout(function () {
              wikiHtmlString = "Failed to get wikipedia resources";
              marker.infoWindow.setContent(wikiHtmlString);
          }, 8000);
 
-        // Make an ajax call to wikipedia api
+
         $.ajax({
             url: wikiUrl,
             dataType: 'jsonp',
-            success: function (response) {
-                var title = response[1][0];
-                var body = response[2][0];
-                var url = 'http://en.wikipedia.org/wiki/' + title;
+            async: true
+        }).done(function(response){
+            console.log('success')
+            var title = response[1][0];
+            var body = response[2][0];
+            var url = baseUrl + '/wiki/' + title;
 
-                wikiHtmlString ='<a href="' + url + '">' +
-                title + '</a>' +
-                '<div>' + body + '</div>';
+            // link
+            wikiHtmlString ='<a href="' + url + '">' +
+            title + '</a>' +
+            '<div>' + body + '</div>';
 
-                var nameArr = marker.title.split(',');
-                var city = nameArr[0];
-                var country = nameArr[nameArr.length - 1];
+            var nameArr = marker.title.split(',');
+            var city = nameArr[0];
+            var country = nameArr[nameArr.length - 1];
 
-                var contentString = '<div id="content" >'+
-                    '<div id="siteNotice">'+
-                    '</div>'+
-                    '<h1 id="firstHeading" class="firstHeading">'+ city +
-                        '<span id="secondHeading" class="secondHeading">'+ country +'</span>'+
-                    '</h1>'+
-                    '<div id="bodyContent">'+
-                    '<a href="' + url + '" target="_blank">' +
-                     'Read More...</a>' +
-                    '<div style="color:#777">' + body + '</div>' +
-                    '</div>'+
-                    '</div>';
+            var contentString = '<div id="content" >'+
+                '<div id="siteNotice">'+
+                '</div>'+
+                '<h1 id="firstHeading" class="firstHeading">'+ city +
+                '<span id="secondHeading" class="secondHeading">'+ country +'</span>'+
+                '</h1>'+
+                '<div id="bodyContent">'+
+                '<a href="' + url + '" target="_blank">' +
+                'Read More...</a>' +
+                '<div style="color:#777">' + body + '</div>' +
+                '</div>'+
+                '</div>';
 
-                // Remove timer after certain time has expired
-                clearTimeout(wikiRequestTimeout);
+            // Remove timer after certain time has expired
+            clearTimeout(wikiRequestTimeout);
 
-                // Set the content of infoWindow to the htmlString
-                marker.infoWindow.setContent(contentString);
-            }
+            // Set the content of infoWindow to the htmlString
+            marker.infoWindow.setContent(contentString);
         });
     };
 
@@ -475,6 +507,14 @@ var ViewModel = function() {
                 }
             }
         }
+    };
+
+    this.fitMap = function(){
+        var bounds = new google.maps.LatLngBounds();
+        for(i=0; i< markers.length; i++){
+            bounds.extend(markers[i].getPosition());
+        }
+        map.fitBounds(bounds);
     };
 
     /**
@@ -521,19 +561,20 @@ var ViewModel = function() {
         }
 
         markers.push(marker);
+        self.currentMarker(marker);
 
         google.maps.event.addListener(marker, 'click', function() {
             self.selectThisMarker(marker);
-            self.closeControls();
         });
 
         google.maps.event.addListener(marker.infoWindow,'closeclick',function(){
             self.deactivateMarker(marker);
+            self.fitMap();
+            //map.setZoom(1);
         });
 
         google.maps.event.addListener(marker, 'mouseover', function() {
             marker.setIcon(activeIcon);
-            console.log(marker)
         });
 
         google.maps.event.addListener(marker, 'mouseout', function() {
@@ -545,9 +586,7 @@ var ViewModel = function() {
         //google.maps.event.addDomListener(window, 'load', initialize);
         google.maps.event.addDomListener(window, "resize", function() {
             console.log('resize');
-            var center = map.getCenter();
-            google.maps.event.trigger(map, "resize");
-            map.setCenter(center);
+            self.fitMap();
         });
 
         bounds.extend(new google.maps.LatLng(lat, lon));
@@ -555,11 +594,6 @@ var ViewModel = function() {
      };
 };
 
-
-$(document).ready(function(){
-    ko.applyBindings(new ViewModel());
-
-});
 
 // Add the missing knockout utility function to see if a string start with a substring
 ko.utils.stringStartsWith = function (string, startsWith) {
