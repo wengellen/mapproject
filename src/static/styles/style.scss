@@ -133,7 +133,7 @@ input[type='text'] {
   left: -300px;
   width: 300px;
   height: calc(100% - 34px);
-  background-color: rgba(#000033, 0.5);
+  background-color: rgba(0, 0, 51, 0.6);
   border: 1px solid #000033;
   text-align: center;
   color: white;
@@ -172,9 +172,10 @@ input[type='text'] {
 }
 
 .list-item {
+  display: inline-block;
+  width: 100%;
   word-wrap: normal;
   color: #003333;
-
   font-size: 1.1em;
   cursor: pointer;
   transition: all 0.2s ease-in;
@@ -188,6 +189,7 @@ input[type='text'] {
   &:active
   {
     outline: 0;
+    color: rgba(white, 0.7);
   }
 }
 
@@ -218,10 +220,17 @@ input[type='text'] {
   button{
     width: 23%;
   }
+
+  .msg{
+    color: rgba(white, 0.6);
+    font-size: 14px;
+    text-align: left;
+    padding: 10px 10px;
+  }
 }
 
 .add-place-container, .search-place-container, .location-list {
-  padding-bottom: 24px;
+  padding-bottom: 4px;
 }
 
 /*  MAP
@@ -240,7 +249,7 @@ input[type='text'] {
   z-index: 101;
   bottom: 0;
   width: 100%;
-  background-color: #191919;
+  background-color: darken(rgba(0, 0, 51, 0.8), 20%);
   color: darkgrey;
   text-align: center;
   padding: 4px 0;
@@ -273,8 +282,38 @@ input[type='text'] {
 
 
 /* Marker InfoWindow */
+.content {
+  background-color: rgba(0, 0, 51, 0.2);
+}
+
 .secondHeading {
   color: #a9a9a9;
+}
+
+.readMore {
+  font-weight: bold;
+  color: #d4d4d4;
+  background-color: rgba(0, 0, 51, 0.8);
+  padding: 2px 8px;
+  margin: 14px 0 10px;
+  &:hover,
+  &:active {
+    color: white;
+  }
+}
+
+.gm-style .gm-style-iw {
+  font-size: 14px !important;
+}
+
+.gm-style-iw{
+  width: 260px !important;
+}
+
+.infoBody {
+  padding-top: 8px;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 @media screen and (max-width: 400px) {

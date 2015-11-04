@@ -4,15 +4,26 @@
 //-------------
 
 var initialLocations = [
-        "San Francisco",
-        "Taipei",
-        "London",
-        "Johannesburg",
-        "Mumbai"
+    {country: "United States", name:"San Francisco", lat:"", lng:""},
+    {country: 'United Kingdom', name:"London" , lat:"", lng:""},
+    {country: "Johannesburg", name:"Johannesburg", lat:"", lng:""},
+    {country: "India", name:"Mumbai",  lat:"", lng:""},
+    {country: "Taiwan", name:"Taipei", lat:"", lng:""}
     ];
 
     var Location = function(data){
-      this.name = ko.observable(data);
+        this.name = ko.observable(data.name);
+        this.country = ko.observable(data.country);
+        this.lat = ko.observable(data.lat);
+        this.lng = ko.observable(data.lng);
+        this.title = ko.computed(function(){
+            if(data.name && data.country){
+                return this.name() + ', ' + this.country();
+            }else{
+                return '';
+            }
+
+        }, this);
     };
 
 // Google Map reference
@@ -23,6 +34,7 @@ var markers = [];
 var nav = document.querySelector('.nav');
 var menu_icon = document.querySelector('.menu_icon');
 var markerList = document.getElementsByClassName('marker-list');
+var addInput = $('#add-input');
 
 // Custom Binding for google map
 if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multiselect) {
@@ -78,30 +90,34 @@ if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multi
             map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
             var service = new google.maps.places.PlacesService(map);
-            window.mapBounds = new google.maps.LatLngBounds();
 
             // Add initial markers to map.
             bindingContext.$data.addMarkers(locationList);
         },
 
         update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            //var locationList = ko.unwrap(valueAccessor());
-            //bindingContext.$data.filterMarkers();
-            var locationList = bindingContext.$data.filterLocations();
+            bindingContext.$data.filterLocations();
         }
     };
 }
 // ViewModel
 var ViewModel = function() {
     var self = this;
-
-    this.newLocation = ko.observable('');
+    var defaultLocation = new Location({name:'', country:'', lat:'', lng:''});
+    this.newLocation = ko.observable(defaultLocation);
 
     // Search string to filter the locations
     this.searchString = ko.observable('');
 
     // Store current selected marker
     this.currentMarker = ko.observable({});
+
+    // Flag to check if the city entered is from the city directory
+    this.isCityValid =  ko.observable(false);
+
+    this.newLocation.subscribe(function(newValue){
+        console.log(newValue.name(), newValue.country(), newValue.title());
+    });
 
     // List to hold the locations
     //this.locationList = ko.observableArray([]);
@@ -110,7 +126,7 @@ var ViewModel = function() {
     }));
 
     // Default the currentLocation to have a name of empty string
-    this.currentLocation = ko.observable(new Location({name:''}));
+    this.currentLocation = ko.observable(new Location(''));
 
     /**
      * Move he nav panel in and out of view
@@ -118,10 +134,8 @@ var ViewModel = function() {
      * @param event the event being dispathced
      */
     this.toggleNav = function(item, event){
-        console.log('toggleNav');
         nav.classList.toggle('visible');
         event.stopPropagation();
-        console.log(menu_icon);
         // Swap out Menu button
         if(menu_icon.classList.contains('contract')){
             menu_icon.classList.remove('contract');
@@ -130,7 +144,6 @@ var ViewModel = function() {
             menu_icon.classList.remove('expand');
             menu_icon.classList.add('contract');
         }
-
     };
 
     /**
@@ -140,6 +153,9 @@ var ViewModel = function() {
         self.currentLocation(data);
     };
 
+    this.clearCityInput = function(){
+        addInput.val('');
+    }
     /**
      *  It moves location list off screen
      */
@@ -153,11 +169,8 @@ var ViewModel = function() {
      * City name autoComplete jquery widget
      */
     this.initAutoComplete = function(){
-        console.log('initAutoComplete');
-        $('#add-input').autocomplete({
+        addInput.autocomplete({
             source: function( request, response){
-                console.log(request);
-
                 $.ajax({
                     url: "http://gd.geobytes.com/AutoCompleteCity",
                     dataType: 'jsonp',
@@ -172,10 +185,35 @@ var ViewModel = function() {
             minLength: 3,
             select: function(event, ui){
                 // Add this city to list
-                cityString = ui.item.label;
-                cityArr = cityString.split(',');
-                self.newLocation(cityArr[0]);
-                self.addLocation(cityArr[0]);
+                // e.g., "Taipei, TP, Taiwan"
+                var selectedObj = ui.item;
+                // Get detail info for the city
+                $.getJSON(
+                    "http://gd.geobytes.com/GetCityDetails?callback=?&fqcn="+selectedObj.value,
+                    function (data) {
+                        console.log(data);
+                        var city = data.geobytescity;
+                        var country = data.geobytescountry;
+
+                        // Normalize country naming between google api and geobytes
+                        if(country === 'United States'){
+                            country = 'USA';
+                        }
+
+                        if(country === 'United Kingdom'){
+                            country = 'UK';
+                        }
+
+                        // TODO: Use lat and lng to add marker instead of using textSearch
+                        var lat = data.geobyteslatitude;
+                        var lng = data.geobyteslongitude;
+                        self.newLocation(new Location({name: city, country: country, lat: lat, lng: lng}));
+                        self.addLocation();
+                        $(this).val('');
+                        return false;
+                    }
+                );
+                return false;
             },
             open: function() {
                 $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
@@ -186,28 +224,28 @@ var ViewModel = function() {
         });
     }(self);
 
+
     /**
-     * Flag to see if location entered is valid
-     * @type {*|any}
+     * Display Message based on user input
+     *
      */
-    this.validPlace = ko.computed(function (){
-        return self.newLocation() !== '';
-    });
+    this.setMessage = function (elem, msg){
+        $(elem).html(msg);
+    };
 
     /**
      *  Called when add-btn is clicked
      *  It adds the location object to the list and the map
      */
     this.addLocation = function () {
-        if(!self.validPlace()){
+
+        // Exit if empty
+        if(!self.newLocation()){
             return;
         }
+        var locationObj = self.newLocation();
 
-        // reset the search query so that you can see the newly
-        // added list item and marker
         self.clearSearch();
-
-        var place = self.newLocation();
 
         // Add place to list
         function addToList(locObject){
@@ -220,33 +258,30 @@ var ViewModel = function() {
             var service = new google.maps.places.PlacesService(map);
             var request;
             request = {
-                query: locObj.name()
+                query: locObj.title()
             };
             service.textSearch(request, callback);
         }
 
-        // Exit if already exist
-        var match = ko.utils.arrayFirst(self.locationList(), function (item) {
-            //alert('Place has already been added');
-            return place === item.name();
-        });
+        var match =  ko.utils.arrayFirst(self.locationList(), function (item) {
+                return locationObj.name() === item.name();
+            });
 
-        if (!match) {
-            var locObject = new Location(place);
-            self.setCurrentLocation(locObject);
-            addToList(locObject);
-            addThisMarker(locObject);
-
-            // zoom in to city
-            var latLng = self.currentMarker().getPosition();
-            map.setCenter(latLng);
-            map.setZoom(4);
-            self.offsetMap();
+        if (match) {
+            var msg = match.name() + ' is already in your list';
+            alert(msg);
+            self.setMessage('.add-msg', '<b><i>' + match.name() +'</i></b>' + " is already in your list. \n Please enter a different city");
+            self.isCityValid(false);
+            addInput.autocomplete('close');
+            addInput.val('');
+            return;
         }
 
-        self.newLocation('');
+        addToList(locationObj);
+        addThisMarker(locationObj);
+        self.setMessage('.add-msg',  locationObj.name() + " has been added to your list");
         self.closeControls();
-
+        addInput.val('');
         // TODO: scroll the list to the last added item
         // Not working right now.
         markerList.scrollTop = markerList.scrollHeight;
@@ -271,7 +306,7 @@ var ViewModel = function() {
             return self.locationList();
         } else {
             arr =  ko.utils.arrayFilter(self.locationList(), function (item) {
-                return ko.utils.stringStartsWith(item.name().toLowerCase(), filter);
+                return ko.utils.stringStartsWith(item.title().toLowerCase(), filter);
             });
             return arr;
         }
@@ -312,7 +347,7 @@ var ViewModel = function() {
             var marker = markers[i];
             self.deactivateMarker(marker);
 
-            if(place() === marker.name){
+            if(place().toLowerCase() === marker.name.toLowerCase()){
                 self.activateMarker(marker);
                 console.log('match found: ' + marker.name);
             }
@@ -337,7 +372,7 @@ var ViewModel = function() {
      * Offset marker by this value
      */
     this.offsetMap = function(){
-        map.panBy(0, -80);
+        map.panBy(0, -180);
     };
 
 
@@ -360,7 +395,6 @@ var ViewModel = function() {
         self.offsetMap();
 
         self.selectItem(marker, true);
-
     };
 
 
@@ -411,7 +445,7 @@ var ViewModel = function() {
         var request;
         locObjList.forEach(function(place){
             request = {
-                query: place.name()
+                query: place.title()
             };
             service.textSearch(request, callback);
         });
@@ -436,7 +470,7 @@ var ViewModel = function() {
      */
     this.setInfoWindow = function(marker){
         var wikiHtmlString;
-        var baseUrl = 'http://en.wikipedia.org/';
+        var baseUrl = 'http://en.wikipedia.org';
         var wikiUrl = baseUrl + '/w/api.php?action=opensearch&search=' + marker.name + '' +
             '&format=json&callback=wikiCallback';
 
@@ -455,6 +489,7 @@ var ViewModel = function() {
             async: true
         }).done(function(response){
             console.log('success');
+            console.log(response);
             var title = response[1][0];
             var body = response[2][0];
             var url = baseUrl + '/wiki/' + title;
@@ -475,9 +510,9 @@ var ViewModel = function() {
                 '<span id="secondHeading" class="secondHeading">'+ country +'</span>'+
                 '</h1>'+
                 '<div id="bodyContent">'+
-                '<a href="' + url + '" target="_blank">' +
+                '<a class="readMore" href="' + url + '" target="_blank">' +
                 'Read More...</a>' +
-                '<div style="color:#777">' + body + '</div>' +
+                '<div class="infoBody">' + body + '</div>' +
                 '</div>'+
                 '</div>';
 
@@ -503,7 +538,7 @@ var ViewModel = function() {
         // And turn its active state on or off
 
         for(var i=0; i< $items.length; i++){
-            if($items[i].textContent === marker.name){
+            if($items[i].textContent.toLowerCase() === marker.title.toLowerCase()){
                 if(isTrue){
                     $items[i].classList.add('active');
                 }else{
@@ -513,6 +548,9 @@ var ViewModel = function() {
         }
     };
 
+    /**
+     * Resize map to fit all markers
+     */
     this.fitMap = function(){
         var bounds = new google.maps.LatLngBounds();
         for(i=0; i< markers.length; i++){
@@ -522,6 +560,15 @@ var ViewModel = function() {
     };
 
     /**
+     * Remove leading whitespace from String
+     * @param str
+     * @returns {XML|void|string|*}
+     */
+    this.normalizeTitle = function(str){
+        var result = str.replace(/^\s+|\s+$/g, '');
+        return result;
+    };
+    /**
      * Add marker to map
      * @param place result object returned from place service
      */
@@ -529,6 +576,13 @@ var ViewModel = function() {
         var lat = place.geometry.location.lat();
         var lon = place.geometry.location.lng();
         var formattedAddress = place.formatted_address;
+
+        // Concact 1st and last items
+        var cityArr = place.formatted_address.split(',');
+        var city = self.normalizeTitle(cityArr[0]);
+        var country = self.normalizeTitle(cityArr[cityArr.length - 1]);
+        var formattedAddress_short =  city + ', ' + country;
+
         var bounds = window.mapBounds;
         var activeIcon = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
         var inactiveIcon = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
@@ -538,7 +592,7 @@ var ViewModel = function() {
             icon: inactiveIcon,
             animation: google.maps.Animation.DROP,
             position: place.geometry.location,
-            title: formattedAddress,
+            title: formattedAddress_short,
             name: place.name
         });
 
@@ -559,13 +613,17 @@ var ViewModel = function() {
             }
         };
 
-        // If it's the newly added place, activate it
-        if(place.name === self.currentLocation().name()){
-            self.activateMarker(marker);
-        }
-
         markers.push(marker);
         self.currentMarker(marker);
+
+        // Fit all markers on screen
+        self.fitMap();
+
+        // If this is the newly added marker, activate it
+        var locationTitle = self.newLocation().title().toLowerCase();
+        if(formattedAddress_short.toLowerCase() === self.newLocation().title().toLowerCase()){
+            self.selectThisMarker(marker);
+        }
 
         google.maps.event.addListener(marker, 'click', function() {
             self.selectThisMarker(marker);
@@ -589,15 +647,10 @@ var ViewModel = function() {
 
         //google.maps.event.addDomListener(window, 'load', initialize);
         google.maps.event.addDomListener(window, "resize", function() {
-            console.log('resize');
             self.fitMap();
         });
-
-        bounds.extend(new google.maps.LatLng(lat, lon));
-        map.fitBounds(bounds);
      };
 };
-
 
 // Add the missing knockout utility function to see if a string start with a substring
 ko.utils.stringStartsWith = function (string, startsWith) {
