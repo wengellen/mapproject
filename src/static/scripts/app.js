@@ -155,7 +155,7 @@ var ViewModel = function() {
 
     this.clearCityInput = function(){
         addInput.val('');
-    }
+    };
     /**
      *  It moves location list off screen
      */
