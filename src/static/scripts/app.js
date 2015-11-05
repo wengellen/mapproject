@@ -6,7 +6,7 @@
 var initialLocations = [
     {country: "United States", name:"San Francisco", lat:"", lng:""},
     {country: 'United Kingdom', name:"London" , lat:"", lng:""},
-    {country: "Johannesburg", name:"Johannesburg", lat:"", lng:""},
+    {country: "Johannesburg", name:"South Africa", lat:"", lng:""},
     {country: "India", name:"Mumbai",  lat:"", lng:""},
     {country: "Taiwan", name:"Taipei", lat:"", lng:""}
     ];
@@ -73,7 +73,7 @@ if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multi
                 controlText.classList.add('map-button-text');
                 controlUI.appendChild(controlText);
 
-                controlText.innerHTML = 'Center';
+                controlText.innerHTML = 'Full View';
                 controlUI.addEventListener('click', function () {
                     // TODO: need to contain all markers
                     //google.maps.event.trigger(map, "resize");
@@ -642,7 +642,6 @@ var ViewModel = function() {
         google.maps.event.addListener(marker.infoWindow,'closeclick',function(){
             self.deactivateMarker(marker);
             self.fitMap();
-            //map.setZoom(1);
         });
 
         google.maps.event.addListener(marker, 'mouseover', function() {
