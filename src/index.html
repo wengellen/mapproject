@@ -28,7 +28,7 @@
           <h4>Add your favorite City</h4>
           <div class="add-place-inner input-div">
             <input type="text" placeholder="City Name" name="add-input" id="add-input"
-                   data-bind="textInput: newLocation().title, event:{change:addLocation, click:clearCityInput}, valueUpdate:'afterkeydown'"  >
+                   data-bind="textInput: newLocation().title, event:{change:addLocation, click:clearCityInput}"  >
             <button id="add-btn" class="btn-large" data-bind="click: addLocation">Add</button>
             <p class="msg add-msg">Type to select from list of cities</p>
           </div>
@@ -38,7 +38,7 @@
           <h4>Filter city by name</h4>
           <div id="search-inner input-div">
             <input type="text" placeholder="Search" name="search-input" id="search-input"
-                   data-bind="textInput: searchString"
+                   data-bind="textInput: filterString"
                     >
             <button id="clear-btn" class="btn-large" data-bind="click: clearSearch">Clear</button>
             <p class="msg search-msg"></p>
@@ -49,7 +49,7 @@
 
           <ul class="marker-list" data-bind="foreach: filterLocations">
             <li >
-              <a href="#" class="list-item" data-bind="text: title, click: $parent.selectThisPlace(name)"></a>
+              <a href="#" class="list-item" data-bind="text: title, click: $parent.selectThisPlace.bind($data,name)"></a>
             </li>
           </ul>
         </div>

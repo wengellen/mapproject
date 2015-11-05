@@ -40,8 +40,8 @@ var addInput = $('#add-input');
 if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multiselect) {
     ko.bindingHandlers.map = {
         init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-            var locationList = bindingContext.$data.filterLocations();
-            //var locationList = ko.unwrap(valueAccessor());
+            //var locationList = bindingContext.$data.filterLocations();
+            var locationList = ko.unwrap(valueAccessor());
 
             // This is the minimum zoom level that we'll allow
             var minZoomLevel = 0;
@@ -97,6 +97,7 @@ if (typeof ko !== 'undefined' && ko.bindingHandlers && !ko.bindingHandlers.multi
 
         update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
             bindingContext.$data.filterLocations();
+            bindingContext.$data.filterMarkers();
         }
     };
 }
@@ -107,7 +108,7 @@ var ViewModel = function() {
     this.newLocation = ko.observable(defaultLocation);
 
     // Search string to filter the locations
-    this.searchString = ko.observable('');
+    this.filterString = ko.observable('');
 
     // Store current selected marker
     this.currentMarker = ko.observable({});
@@ -120,13 +121,12 @@ var ViewModel = function() {
     });
 
     // List to hold the locations
-    //this.locationList = ko.observableArray([]);
     this.locationList = ko.observableArray(ko.utils.arrayMap(initialLocations, function(locationItem){
         return new Location(locationItem);
     }));
 
     // Default the currentLocation to have a name of empty string
-    this.currentLocation = ko.observable(new Location(''));
+    this.currentLocation = ko.observable(new Location({name:''}));
 
     /**
      * Move he nav panel in and out of view
@@ -243,9 +243,20 @@ var ViewModel = function() {
         if(!self.newLocation()){
             return;
         }
-        var locationObj = self.newLocation();
 
+        var newCity = (self.newLocation().name() + ', ' + self.newLocation().country()).toLowerCase();
+        var input = addInput.val().toLowerCase();
+
+        // Exist if the value is not retrieved from the database
+        if(newCity !== input){
+            return;
+        }
+
+        // reset the search query so that you can see the newly
+        // added list item and marker
         self.clearSearch();
+
+        var locationObj = self.newLocation();
 
         // Add place to list
         function addToList(locObject){
@@ -293,7 +304,7 @@ var ViewModel = function() {
      *  It nulls the text input value
      */
     this.clearSearch = function(){
-        self.searchString('');
+        self.filterString('');
     };
 
     /**
@@ -301,7 +312,7 @@ var ViewModel = function() {
      * based on bounded searchString value
      */
     this.filterLocations = ko.computed(function () {
-        var filter = self.searchString().toLowerCase();
+        var filter = self.filterString().toLowerCase();
         if (!filter) {
             return self.locationList();
         } else {
@@ -312,12 +323,14 @@ var ViewModel = function() {
         }
     });
 
+
     /**
      * Called during Map's update phase to show/hide markers
      * based on searched query string
      */
     this.filterMarkers = function(){
         var service = new google.maps.places.PlacesService(map);
+
         for( var i = 0; i < markers.length; i++){
             var marker = markers[i];
             if(!matchQuery(marker)){
@@ -328,13 +341,14 @@ var ViewModel = function() {
         }
     };
 
+
     /**
      * Helper method to find out if the marker matches the search query
      * @param marker
      * @returns {boolean}
      */
     function matchQuery(marker) {
-        var filter = self.searchString().toLowerCase();
+        var filter = self.filterString().toLowerCase();
         return ko.utils.stringStartsWith(marker.name.toLowerCase(), filter);
     }
 
@@ -349,7 +363,6 @@ var ViewModel = function() {
 
             if(place().toLowerCase() === marker.name.toLowerCase()){
                 self.activateMarker(marker);
-                console.log('match found: ' + marker.name);
             }
         }
         self.closeControls();
@@ -360,9 +373,8 @@ var ViewModel = function() {
             markerItem = markers[i];
             self.deactivateMarker(markerItem);
 
-            if(markerItem === marker){
+            if(markerItem.name === marker.name){
                 self.activateMarker(marker);
-                console.log('match found: ' + marker.name);
             }
         }
         self.closeControls();
@@ -422,6 +434,7 @@ var ViewModel = function() {
             }
         }
     };
+
 
     /**
      * Make this marker invisible
@@ -488,8 +501,6 @@ var ViewModel = function() {
             dataType: 'jsonp',
             async: true
         }).done(function(response){
-            console.log('success');
-            console.log(response);
             var title = response[1][0];
             var body = response[2][0];
             var url = baseUrl + '/wiki/' + title;
@@ -620,7 +631,6 @@ var ViewModel = function() {
         self.fitMap();
 
         // If this is the newly added marker, activate it
-        var locationTitle = self.newLocation().title().toLowerCase();
         if(formattedAddress_short.toLowerCase() === self.newLocation().title().toLowerCase()){
             self.selectThisMarker(marker);
         }
@@ -664,3 +674,4 @@ ko.utils.stringStartsWith = function (string, startsWith) {
 function isObservableArray( obj ) {
     return ( ko.isObservable(obj) && obj.hasOwnProperty('remove')  );
 }
+
